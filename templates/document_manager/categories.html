@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load document_extras %}
+
+{% block title %}Document Categories - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+.category-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container px-4">
+    <!-- Header -->
+    <div class="glass-card p-4 mb-4">
+        <h1 class="text-glass mb-2">
+            <i class="fas fa-folder-open me-3 text-gradient"></i>
+            Document Categories
+        </h1>
+        <p class="text-glass-muted mb-0">
+            Browse documents organized by subject and topic
+        </p>
+    </div>
+
+    <!-- Categories Grid -->
+    {% if categories %}
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="category-card h-100 p-4">
+                <div class="text-center mb-3">
+                    <i class="{{ category.icon|default:'fas fa-folder' }} fa-3x text-gradient"></i>
+                </div>
+                <h5 class="text-glass text-center mb-2">{{ category.name }}</h5>
+                <p class="text-glass-muted small text-center mb-3">
+                    {{ category.description|default:"Documents in this category" }}
+                </p>
+                <div class="text-center mb-3">
+                    <span class="badge bg-primary">{{ category.document_count }} Document{{ category.document_count|pluralize }}</span>
+                </div>
+                <div class="d-grid">
+                    <a href="{% url 'document_manager:category_documents' category_id=category.id %}" 
+                       class="btn btn-3d">
+                        <i class="fas fa-folder-open me-2"></i>Browse Category
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card p-5 text-center">
+        <i class="fas fa-folder-open fa-4x text-muted mb-4"></i>
+        <h4 class="text-glass mb-3">No Categories Available</h4>
+        <p class="text-glass-muted">Categories will be available soon.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+<div class="row text-center">
+    <div class="col-4">
+        <div class="stat-item">
+            <small class="text-glass-muted d-block">Downloads</small>
+            <span class="text-glass">{{ download_count }}</span>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="stat-item">
+            <small class="text-glass-muted d-block">Views</small>
+            <span class="text-glass">{{ view_count }}</span>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="stat-item">
+            <small class="text-glass-muted d-block">Rating</small>
+            <span class="text-glass">{{ average_rating|floatformat:1 }}/5</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quiz_extras %}
+
+{% block title %}Leaderboard - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 50px 30px;
+        margin-bottom: 40px;
+        text-align: center;
+    }
+    .leaderboard-item {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+        transition: transform 0.2s;
+    }
+    .leaderboard-item:hover {
+        transform: translateY(-2px);
+    }
+    .rank-badge {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
+    .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A9A9A9); color: white; }
+    .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; }
+    .rank-other { background: linear-gradient(135deg, #6c757d, #495057); color: white; }
+    
+    .trophy-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    .gold { color: #FFD700; }
+    .silver { color: #C0C0C0; }
+    .bronze { color: #CD7F32; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="leaderboard-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-trophy"></i> Quiz Leaderboard
+                </h1>
+                <p class="lead">Discover the top performers and quiz champions!</p>
+            </div>
+            <div class="col-lg-4">
+                <i class="fas fa-medal fa-5x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 3 Podium -->
+    {% if top_performers|length >= 3 %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0" style="background: linear-gradient(135deg, #667eea22, #764ba222);">
+                <div class="card-body p-5">
+                    <h4 class="text-center mb-4"><i class="fas fa-crown text-warning"></i> Top 3 Champions</h4>
+                    <div class="row text-center">
+                        <!-- 2nd Place -->
+                        <div class="col-md-4 order-md-1">
+                            <div class="mb-3">
+                                <div class="rank-badge rank-2 mx-auto mb-3">2</div>
+                                <i class="fas fa-trophy trophy-icon silver"></i>
+                                <h5>{{ top_performers.1.user.username }}</h5>
+                                <p class="text-muted">{{ top_performers.1.quiz.title|truncatechars:30 }}</p>
+                                <h4>{{ top_performers.1.percentage_score|floatformat:1 }}%</h4>
+                            </div>
+                        </div>
+                        <!-- 1st Place -->
+                        <div class="col-md-4 order-md-2">
+                            <div class="mb-3">
+                                <div class="rank-badge rank-1 mx-auto mb-3">1</div>
+                                <i class="fas fa-trophy trophy-icon gold"></i>
+                                <h4>{{ top_performers.0.user.username }}</h4>
+                                <p class="text-muted">{{ top_performers.0.quiz.title|truncatechars:30 }}</p>
+                                <h3 class="text-warning">{{ top_performers.0.percentage_score|floatformat:1 }}%</h3>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-crown"></i> Champion
+                                </span>
+                            </div>
+                        </div>
+                        <!-- 3rd Place -->
+                        <div class="col-md-4 order-md-3">
+                            <div class="mb-3">
+                                <div class="rank-badge rank-3 mx-auto mb-3">3</div>
+                                <i class="fas fa-trophy trophy-icon bronze"></i>
+                                <h5>{{ top_performers.2.user.username }}</h5>
+                                <p class="text-muted">{{ top_performers.2.quiz.title|truncatechars:30 }}</p>
+                                <h4>{{ top_performers.2.percentage_score|floatformat:1 }}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Leaderboard -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-list-ol"></i> Complete Leaderboard</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if top_performers %}
+                {% for performer in top_performers %}
+                <div class="leaderboard-item card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                {% if forloop.counter <= 3 %}
+                                    <div class="rank-badge rank-{{ forloop.counter }}">
+                                        {{ forloop.counter }}
+                                    </div>
+                                {% else %}
+                                    <div class="rank-badge rank-other">
+                                        {{ forloop.counter }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6 class="mb-1">
+                                            {% if forloop.counter <= 3 %}
+                                                <i class="fas fa-trophy trophy-icon 
+                                                   {% if forloop.counter == 1 %}gold
+                                                   {% elif forloop.counter == 2 %}silver
+                                                   {% else %}bronze{% endif %}"></i>
+                                            {% endif %}
+                                            {{ performer.user.username }}
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user"></i> 
+                                            {{ performer.user.first_name|default:"Quiz Taker" }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="mb-1">{{ performer.quiz.title|truncatechars:40 }}</h6>
+                                        <small class="text-muted">
+                                            <i class="{{ performer.quiz.category.icon }}"></i> 
+                                            {{ performer.quiz.category.name }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% difficulty_badge performer.quiz.difficulty %}
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <h5 class="mb-1 text-primary">{{ performer.percentage_score|floatformat:1 }}%</h5>
+                                        <small class="text-muted">
+                                            {{ performer.score }}/{{ performer.quiz.total_marks }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between text-muted small">
+                                            <span>
+                                                <i class="fas fa-calendar"></i> 
+                                                {{ performer.completed_at|date:"M d, Y" }}
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-clock"></i> 
+                                                {{ performer.time_taken|duration_format }}
+                                            </span>
+                                            <span>
+                                                {% grade_badge performer.grade %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                    <h4>No Completed Quizzes Yet</h4>
+                    <p class="text-muted">Be the first to complete a quiz and claim the top spot!</p>
+                    <a href="{% url 'quiz_app:quiz_list' %}" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Take a Quiz Now
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white text-center">
+                <div class="card-body py-4">
+                    <h4><i class="fas fa-target"></i> Think You Can Do Better?</h4>
+                    <p class="mb-3">Challenge yourself and climb the leaderboard!</p>
+                    <a href="{% url 'quiz_app:quiz_list' %}" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-play"></i> Take Quiz
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'quiz_app:generate_ai_quiz' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-robot"></i> Generate AI Quiz
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

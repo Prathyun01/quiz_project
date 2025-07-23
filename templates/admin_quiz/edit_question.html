@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Question - {{ quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-header {
+        background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    .choice-formset {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        background: #f8f9fa;
+    }
+    .choice-formset.to-delete {
+        opacity: 0.5;
+        background: #f8d7da;
+    }
+    .add-choice-btn {
+        border: 2px dashed #007bff;
+        background: transparent;
+        color: #007bff;
+        padding: 15px;
+        border-radius: 10px;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    .add-choice-btn:hover {
+        background: #e3f2fd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'admin_quiz:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'admin_quiz:quiz_detail' quiz_id=quiz.id %}">{{ quiz.title|truncatechars:30 }}</a></li>
+            <li class="breadcrumb-item active">Edit Question</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="question-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2><i class="fas fa-edit"></i> Edit Question</h2>
+                <p class="lead mb-0">Question {{ question.order }} in {{ quiz.title }}</p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-question-circle fa-4x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="questionEditForm">
+        {% csrf_token %}
+        
+        <!-- Question Details Section -->
+        <div class="form-section">
+            <h5><i class="fas fa-question"></i> Question Details</h5>
+            <hr>
+            {% crispy question_form %}
+        </div>
+
+        <!-- Choices Section -->
+        <div class="form-section">
+            <h5><i class="fas fa-list"></i> Answer Choices</h5>
+            <p class="text-muted">Add multiple choice options. Mark the correct answer(s).</p>
+            <hr>
+            
+            <div id="choice-formset">
+                {{ choice_formset.management_form }}
+                {% for form in choice_formset %}
+                    <div class="choice-formset" data-form-index="{{ forloop.counter0 }}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6><i class="fas fa-circle"></i> Choice {{ forloop.counter }}</h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-choice" 
+                                    onclick="deleteChoice(this)">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                {{ form.choice_text.label_tag }}
+                                {{ form.choice_text }}
+                                {% if form.choice_text.errors %}
+                                    <div class="text-danger small">{{ form.choice_text.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2">
+                                {{ form.order.label_tag }}
+                                {{ form.order }}
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-check mt-4">
+                                    {{ form.is_correct }}
+                                    <label class="form-check-label" for="{{ form.is_correct.id_for_label }}">
+                                        Correct Answer
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if form.explanation %}
+                        <div class="mt-3">
+                            {{ form.explanation.label_tag }}
+                            {{ form.explanation }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Hidden DELETE field -->
+                        {% if form.DELETE %}
+                            {{ form.DELETE }}
+                        {% endif %}
+                        
+                        <!-- Hidden ID field -->
+                        {% if form.id %}
+                            {{ form.id }}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Add Choice Button -->
+            <button type="button" class="add-choice-btn" onclick="addChoice()">
+                <i class="fas fa-plus-circle"></i> Add Another Choice
+            </button>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-section">
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'admin_quiz:quiz_detail' quiz_id=quiz.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Quiz
+                </a>
+                <div>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save"></i> Save Question
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let formIndex = {{ choice_formset.forms|length }};
+
+function addChoice() {
+    const formsetDiv = document.getElementById('choice-formset');
+    const managementForm = document.querySelector('input[name="form-TOTAL_FORMS"]');
+    
+    // Create new form HTML
+    const newFormHtml = `
+        <div class="choice-formset" data-form-index="${formIndex}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6><i class="fas fa-circle"></i> Choice ${formIndex + 1}</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger delete-choice" 
+                        onclick="deleteChoice(this)">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <label for="id_form-${formIndex}-choice_text">Choice text:</label>
+                    <input type="text" name="form-${formIndex}-choice_text" 
+                           class="form-control" id="id_form-${formIndex}-choice_text">
+                </div>
+                <div class="col-md-2">
+                    <label for="id_form-${formIndex}-order">Order:</label>
+                    <input type="number" name="form-${formIndex}-order" 
+                           class="form-control" id="id_form-${formIndex}-order" value="${formIndex + 1}">
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" name="form-${formIndex}-is_correct" 
+                               class="form-check-input" id="id_form-${formIndex}-is_correct">
+                        <label class="form-check-label" for="id_form-${formIndex}-is_correct">
+                            Correct Answer
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <label for="id_form-${formIndex}-explanation">Explanation:</label>
+                <textarea name="form-${formIndex}-explanation" class="form-control" 
+                          id="id_form-${formIndex}-explanation" rows="1"></textarea>
+            </div>
+            
+            <input type="hidden" name="form-${formIndex}-id" id="id_form-${formIndex}-id">
+        </div>
+    `;
+    
+    // Insert before the add button
+    const addButton = document.querySelector('.add-choice-btn');
+    addButton.insertAdjacentHTML('beforebegin', newFormHtml);
+    
+    // Update management form
+    formIndex++;
+    managementForm.value = formIndex;
+}
+
+function deleteChoice(button) {
+    const choiceDiv = button.closest('.choice-formset');
+    const deleteCheckbox = choiceDiv.querySelector('input[name$="-DELETE"]');
+    
+    if (deleteCheckbox) {
+        // Mark for deletion
+        deleteCheckbox.checked = true;
+        choiceDiv.classList.add('to-delete');
+        button.innerHTML = '<i class="fas fa-undo"></i> Undo';
+        button.onclick = function() { undoDelete(this); };
+    } else {
+        // Remove from DOM (new choice)
+        choiceDiv.remove();
+    }
+}
+
+function undoDelete(button) {
+    const choiceDiv = button.closest('.choice-formset');
+    const deleteCheckbox = choiceDiv.querySelector('input[name$="-DELETE"]');
+    
+    deleteCheckbox.checked = false;
+    choiceDiv.classList.remove('to-delete');
+    button.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    button.onclick = function() { deleteChoice(this); };
+}
+
+// Form submission handling
+document.getElementById('questionEditForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

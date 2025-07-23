@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Discover Users - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/social.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="text-glass mb-2">
+                            <i class="fas fa-user-friends me-3 text-gradient"></i>
+                            Discover Users
+                        </h1>
+                        <p class="text-glass-muted mb-0">
+                            Find and connect with fellow learners in your community
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'social:search_users' %}" class="btn btn-3d">
+                            <i class="fas fa-search me-2"></i>Advanced Search
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-3">
+                <div class="d-flex gap-2 flex-wrap justify-content-center">
+                    <a href="?filter=recommended" 
+                       class="btn {% if filter_type == 'recommended' or not filter_type %}btn-primary{% else %}btn-outline-light{% endif %}">
+                        <i class="fas fa-magic me-2"></i>Recommended
+                    </a>
+                    <a href="?filter=popular" 
+                       class="btn {% if filter_type == 'popular' %}btn-primary{% else %}btn-outline-light{% endif %}">
+                        <i class="fas fa-star me-2"></i>Popular
+                    </a>
+                    <a href="?filter=recent" 
+                       class="btn {% if filter_type == 'recent' %}btn-primary{% else %}btn-outline-light{% endif %}">
+                        <i class="fas fa-user-plus me-2"></i>New Members
+                    </a>
+                    <a href="?filter=active" 
+                       class="btn {% if filter_type == 'active' %}btn-primary{% else %}btn-outline-light{% endif %}">
+                        <i class="fas fa-bolt me-2"></i>Most Active
+                    </a>
+                </div>
+                
+                {% if search_query %}
+                <div class="mt-3 text-center">
+                    <small class="text-glass-muted">
+                        Showing results for: <strong>{{ search_query }}</strong>
+                        <a href="{% url 'social:discover_users' %}" class="ms-2 text-decoration-none">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommended Users (if showing recommended) -->
+    {% if recommended_users and filter_type != 'recommended' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-magic me-2 text-gradient"></i>Recommended for You
+                </h5>
+                <div class="row">
+                    {% for user in recommended_users %}
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <div class="user-card text-center">
+                            <div class="user-avatar-3d mb-3">
+                                <img src="{{ user.profile_picture.url }}" alt="{{ user.display_name }}" 
+                                     class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                            </div>
+                            <h6 class="text-glass mb-1">{{ user.display_name }}</h6>
+                            <small class="text-glass-muted d-block mb-2">@{{ user.username }}</small>
+                            <div class="user-stats mb-3">
+                                <small class="text-glass-muted">
+                                    <i class="fas fa-trophy me-1"></i>{{ user.total_quiz_attempts }} quizzes
+                                </small>
+                            </div>
+                            <button class="follow-btn-3d btn-sm w-100" 
+                                    onclick="followUser('{{ user.id }}', this)"
+                                    data-user-id="{{ user.id }}">
+                                {% if user.id in following_ids %}
+                                <i class="fas fa-user-check me-1"></i>Following
+                                {% else %}
+                                <i class="fas fa-user-plus me-1"></i>Follow
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Users Grid -->
+    <div class="row">
+        {% for user in users %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <div class="user-card">
+                <div class="user-avatar-3d mb-3">
+                    <img src="{{ user.profile_picture.url }}" alt="{{ user.display_name }}" 
+                         class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                </div>
+                
+                <h5 class="text-glass mb-1">{{ user.display_name }}</h5>
+                <p class="text-glass-muted mb-2">@{{ user.username }}</p>
+                
+                {% if user.bio %}
+                <p class="text-glass-muted small mb-3">{{ user.bio|truncatewords:15 }}</p>
+                {% endif %}
+                
+                <div class="social-stats mb-3">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user.followers.count }}</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user.following.count }}</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ user.total_quiz_attempts }}</div>
+                        <div class="stat-label">Quizzes</div>
+                    </div>
+                </div>
+                
+                {% if user.college %}
+                <div class="user-meta mb-3">
+                    <small class="text-glass-muted">
+                        <i class="fas fa-university me-1"></i>{{ user.college.name }}
+                    </small>
+                </div>
+                {% endif %}
+                
+                {% if user.year_of_study %}
+                <div class="user-meta mb-3">
+                    <small class="text-glass-muted">
+                        <i class="fas fa-graduation-cap me-1"></i>{{ user.get_year_of_study_display }}
+                    </small>
+                </div>
+                {% endif %}
+                
+                <div class="user-actions d-grid gap-2">
+                    <button class="follow-btn-3d {% if user.id in following_ids %}following{% endif %}" 
+                            onclick="followUser('{{ user.id }}', this)"
+                            data-user-id="{{ user.id }}">
+                        {% if user.id in following_ids %}
+                        <i class="fas fa-user-check me-2"></i>Following
+                        {% else %}
+                        <i class="fas fa-user-plus me-2"></i>Follow
+                        {% endif %}
+                    </button>
+                    
+                    <div class="btn-group">
+                        <a href="{% url 'social:user_profile' username=user.username %}" 
+                           class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-eye me-1"></i>View Profile
+                        </a>
+                        <a href="{% url 'messaging:start_conversation' %}?user={{ user.id }}" 
+                           class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-message me-1"></i>Message
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="glass-card p-5 text-center">
+                <i class="fas fa-users fa-3x text-gradient mb-3"></i>
+                <h4 class="text-glass mb-2">No users found</h4>
+                <p class="text-glass-muted mb-3">
+                    {% if search_query %}
+                    Try adjusting your search criteria or browse different categories.
+                    {% else %}
+                    Check back later for new users to connect with.
+                    {% endif %}
+                </p>
+                {% if search_query %}
+                <a href="{% url 'social:discover_users' %}" class="btn btn-3d">
+                    <i class="fas fa-refresh me-2"></i>Browse All Users
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="glass-card p-3">
+                <nav aria-label="Users pagination">
+                    <ul class="pagination pagination-3d justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function followUser(userId, buttonElement) {
+    const isFollowing = buttonElement.classList.contains('following');
+    const action = isFollowing ? 'unfollow' : 'follow';
+    
+    // Update button state immediately for better UX
+    buttonElement.disabled = true;
+    const originalContent = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    fetch('{% url "social:follow_user" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (action === 'follow') {
+                buttonElement.classList.add('following');
+                buttonElement.innerHTML = '<i class="fas fa-user-check me-2"></i>Following';
+            } else {
+                buttonElement.classList.remove('following');
+                buttonElement.innerHTML = '<i class="fas fa-user-plus me-2"></i>Follow';
+            }
+            
+            // Update follower count if displayed
+            const userCard = buttonElement.closest('.user-card');
+            const followerStat = userCard.querySelector('.stat-item .stat-number');
+            if (followerStat) {
+                const currentCount = parseInt(followerStat.textContent);
+                followerStat.textContent = action === 'follow' ? currentCount + 1 : currentCount - 1;
+            }
+            
+            showSuccess(data.message);
+        } else {
+            showError(data.error || 'Failed to update follow status');
+            buttonElement.innerHTML = originalContent;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Network error occurred');
+        buttonElement.innerHTML = originalContent;
+    })
+    .finally(() => {
+        buttonElement.disabled = false;
+    });
+}
+
+// Animate user cards on scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    const userCards = document.querySelectorAll('.user-card');
+    userCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = `opacity 0.6s ease ${index * 0.05}s, transform 0.6s ease ${index * 0.05}s`;
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

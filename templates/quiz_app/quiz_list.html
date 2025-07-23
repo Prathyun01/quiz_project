@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quiz_extras %}
+
+{% block title %}AI-Generated Quizzes - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .ai-badge {
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+    }
+    .quiz-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .quiz-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .provider-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+    }
+    .filter-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="card filter-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="mb-3">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.category.label_tag }}
+                            {{ form.category }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.difficulty.label_tag }}
+                            {{ form.difficulty }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.ai_provider.label_tag }}
+                            {{ form.ai_provider }}
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <a href="{% url 'quiz_app:quiz_list' %}" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                            Clear Filters
+                        </a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Generate Quiz CTA -->
+            <div class="card filter-card mt-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                    <h5>Create Your Own Quiz</h5>
+                    <p class="text-muted">Generate AI-powered quizzes on any topic!</p>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'quiz_app:generate_ai_quiz' %}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Generate Quiz
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-success">
+                            <i class="fas fa-sign-in-alt"></i> Login to Generate
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card filter-card mt-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-chart-bar"></i> Platform Stats</h6>
+                    <div class="row text-center">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">Total AI Quizzes</small>
+                            <div class="h5 text-primary">{{ total_quizzes }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-brain text-primary"></i> AI-Generated Quizzes</h2>
+                    <p class="text-muted">Discover {{ total_quizzes }} AI-powered quizzes across various categories</p>
+                </div>
+                <div class="text-end">
+                    <a href="{% url 'quiz_app:categories' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-th-large"></i> Browse Categories
+                    </a>
+                    <a href="{% url 'quiz_app:leaderboard' %}" class="btn btn-outline-info">
+                        <i class="fas fa-trophy"></i> Leaderboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quiz Grid -->
+            {% if quizzes %}
+                <div class="row">
+                    {% for quiz in quizzes %}
+                    <div class="col-md-6 col-xl-4 mb-4">
+                        {% render_quiz_card quiz %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Quiz pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4>No quizzes found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all categories.</p>
+                    <a href="{% url 'quiz_app:categories' %}" class="btn btn-primary">Browse Categories</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'quiz_app:generate_ai_quiz' %}" class="btn btn-success ms-2">
+                            <i class="fas fa-plus"></i> Generate New Quiz
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

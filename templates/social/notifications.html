@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications - Quiz Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="text-glass mb-2">
+                            <i class="fas fa-bell me-3 text-gradient"></i>Notifications
+                        </h1>
+                        <p class="text-glass-muted mb-0">Stay updated with your social activity</p>
+                    </div>
+                    <a href="?mark_all_read=true" class="btn btn-outline-light">
+                        <i class="fas fa-check-double me-2"></i>Mark All Read
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-3">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="?" class="btn {% if not filter_type %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        All
+                    </a>
+                    <a href="?type=follow" class="btn {% if filter_type == 'follow' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-user-plus me-1"></i>Follows
+                    </a>
+                    <a href="?type=quiz_shared" class="btn {% if filter_type == 'quiz_shared' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-share me-1"></i>Quiz Shares
+                    </a>
+                    <a href="?type=achievement" class="btn {% if filter_type == 'achievement' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-trophy me-1"></i>Achievements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            {% if notifications %}
+            {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                 onclick="markAsRead('{{ notification.id }}')">
+                <div class="d-flex align-items-start">
+                    <div class="notification-icon notification-{{ notification.notification_type }} me-3">
+                        {% if notification.notification_type == 'follow' %}
+                        <i class="fas fa-user-plus"></i>
+                        {% elif notification.notification_type == 'quiz_shared' %}
+                        <i class="fas fa-share"></i>
+                        {% elif notification.notification_type == 'achievement' %}
+                        <i class="fas fa-trophy"></i>
+                        {% else %}
+                        <i class="fas fa-bell"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="text-glass mb-1">{{ notification.title }}</h6>
+                            <small class="text-glass-muted">{{ notification.created_at|timesince }} ago</small>
+                        </div>
+                        <p class="text-glass-muted mb-2">{{ notification.message }}</p>
+                        
+                        {% if notification.sender %}
+                        <div class="d-flex align-items-center">
+                            <img src="{{ notification.sender.profile_picture.url }}" 
+                                 alt="{{ notification.sender.display_name }}"
+                                 class="rounded-circle me-2" width="24" height="24">
+                            <small class="text-glass-muted">{{ notification.sender.display_name }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        {% if notification.related_url %}
+                        <div class="mt-2">
+                            <a href="{{ notification.related_url }}" 
+                               class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>View
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="glass-card p-3 mt-4">
+                <nav aria-label="Notifications pagination">
+                    <ul class="pagination pagination-3d justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&type={{ filter_type }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if filter_type %}&type={{ filter_type }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_type %}&type={{ filter_type }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="glass-card p-5 text-center">
+                <i class="fas fa-bell-slash fa-3x text-gradient mb-3"></i>
+                <h4 class="text-glass">No notifications</h4>
+                <p class="text-glass-muted">You're all caught up! Check back later for new notifications.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAsRead(notificationId) {
+    fetch('{% url "social:mark_notification_read" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            notification_id: notificationId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notificationElement = document.querySelector(`[onclick*="${notificationId}"]`);
+            notificationElement.classList.remove('unread');
+        }
+    });
+}
+</script>
+{% endblock %}

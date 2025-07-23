@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quiz_extras %}  <!-- Add this line -->
+
+{% block title %}{{ quiz.title }} - Take Quiz{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .question-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    .choice-option {
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        padding: 15px 20px;
+        margin: 10px 0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .choice-option:hover {
+        border-color: #007bff;
+        background: rgba(0, 123, 255, 0.1);
+        transform: translateX(5px);
+    }
+    .choice-option.selected {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.2);
+        transform: translateX(10px);
+    }
+    .timer-widget {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        z-index: 1000;
+    }
+    .progress-widget {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        padding: 15px 20px;
+        border-radius: 15px;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <!-- Quiz Header -->
+    <div class="text-center mb-4">
+        <h1 class="display-6 mb-3">{{ quiz.title }}</h1>
+        <p class="lead text-muted">{{ quiz.description }}</p>
+        <div class="d-flex justify-content-center gap-3">
+            {% difficulty_badge quiz.difficulty %}
+            <span class="badge bg-info">{{ quiz.question_count }} Questions</span>
+            <span class="badge bg-warning text-dark">{{ quiz.time_limit }} Minutes</span>
+        </div>
+    </div>
+
+    <!-- Timer Widget -->
+    <div class="timer-widget" id="timer">
+        <div class="text-center">
+            <i class="fas fa-clock me-2"></i>
+            <span id="time-remaining">{{ quiz.time_limit }}:00</span>
+        </div>
+    </div>
+
+    <!-- Quiz Form -->
+    <form method="post" id="quizForm">
+        {% csrf_token %}
+        <input type="hidden" name="attempt_id" value="{{ attempt.id }}">
+
+        <!-- Questions -->
+        {% for question in questions %}
+            <div class="question-card" data-question="{{ question.order }}">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <span class="badge bg-secondary me-2">Question {{ question.order }}</span>
+                        {{ question.question_text }}
+                    </h5>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-star me-1"></i>{{ question.marks }} mark{{ question.marks|pluralize }}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% if question.question_type == 'multiple_choice' %}
+                        {% for choice in question.choice_set.all %}
+                            <div class="choice-option" onclick="selectChoice({{ question.id }}, {{ choice.id }}, this)">
+                                <input type="radio" name="question_{{ question.id }}" 
+                                       value="{{ choice.id }}" id="choice_{{ choice.id }}" 
+                                       style="display: none;">
+                                <label for="choice_{{ choice.id }}" class="d-flex align-items-center w-100 cursor-pointer">
+                                    <span class="badge bg-light text-dark me-3">{{ choice.order|add:64|chr_filter }}</span>
+                                    <span>{{ choice.choice_text }}</span>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    {% elif question.question_type == 'true_false' %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="choice-option" onclick="selectChoice({{ question.id }}, 'true', this)">
+                                    <input type="radio" name="question_{{ question.id }}" 
+                                           value="true" id="choice_{{ question.id }}_true" 
+                                           style="display: none;">
+                                    <label for="choice_{{ question.id }}_true" class="d-flex align-items-center w-100">
+                                        <i class="fas fa-check-circle text-success me-3"></i>
+                                        <span>True</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="choice-option" onclick="selectChoice({{ question.id }}, 'false', this)">
+                                    <input type="radio" name="question_{{ question.id }}" 
+                                           value="false" id="choice_{{ question.id }}_false" 
+                                           style="display: none;">
+                                    <label for="choice_{{ question.id }}_false" class="d-flex align-items-center w-100">
+                                        <i class="fas fa-times-circle text-danger me-3"></i>
+                                        <span>False</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Progress Widget -->
+        <div class="progress-widget">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">Progress:</small>
+                    <div class="progress" style="width: 200px; height: 8px;">
+                        <div class="progress-bar" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <span id="answeredCount">0</span> of {{ quiz.question_count }} answered
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="saveProgress()">
+                        <i class="fas fa-save"></i> Save Progress
+                    </button>
+                    <button type="submit" class="btn btn-success" onclick="return confirmSubmit()">
+                        <i class="fas fa-check"></i> Submit Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Submit Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit your quiz?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Once submitted, you cannot make changes to your answers.
+                </div>
+                <div id="submitSummary"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitQuiz()">Yes, Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let timeRemaining = {{ time_limit_seconds }};
+let timerInterval;
+let answeredQuestions = new Set();
+
+document.addEventListener('DOMContentLoaded', function() {
+    startTimer();
+    updateProgress();
+});
+
+function startTimer() {
+    const timerElement = document.getElementById('time-remaining');
+    
+    timerInterval = setInterval(function() {
+        timeRemaining--;
+        
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining <= 300) { // 5 minutes warning
+            document.getElementById('timer').classList.add('bg-warning');
+        }
+        if (timeRemaining <= 60) { // 1 minute warning
+            document.getElementById('timer').classList.remove('bg-warning');
+            document.getElementById('timer').classList.add('bg-danger');
+        }
+        
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            autoSubmitQuiz();
+        }
+    }, 1000);
+}
+
+function selectChoice(questionId, choiceId, element) {
+    // Remove selection from other choices in the same question
+    const questionCard = element.closest('.question-card');
+    questionCard.querySelectorAll('.choice-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Select current choice
+    element.classList.add('selected');
+    document.getElementById(`choice_${choiceId}`).checked = true;
+    
+    // Add to answered questions
+    answeredQuestions.add(questionId);
+    updateProgress();
+    
+    // Auto-save answer (optional)
+    saveAnswer(questionId, choiceId);
+}
+
+function saveAnswer(questionId, choiceId) {
+    // Optional: Implement auto-save via AJAX
+    fetch('{% url "quiz_app:ajax_save_answer" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            attempt_id: '{{ attempt.id }}',
+            question_id: questionId,
+            answer: choiceId
+        })
+    }).then(response => response.json())
+      .then(data => {
+          if (!data.success) {
+              console.error('Failed to save answer:', data.error);
+          }
+      });
+}
+
+function updateProgress() {
+    const totalQuestions = {{ quiz.question_count }};
+    const answeredCount = answeredQuestions.size;
+    const percentage = (answeredCount / totalQuestions) * 100;
+    
+    document.getElementById('progressFill').style.width = percentage + '%';
+    document.getElementById('answeredCount').textContent = answeredCount;
+}
+
+function saveProgress() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }, 1000);
+}
+
+function confirmSubmit() {
+    const totalQuestions = {{ quiz.question_count }};
+    const answeredCount = answeredQuestions.size;
+    const unanswered = totalQuestions - answeredCount;
+    
+    let summaryHtml = `<p><strong>Questions answered:</strong> ${answeredCount} of ${totalQuestions}</p>`;
+    if (unanswered > 0) {
+        summaryHtml += `<p class="text-warning"><strong>Unanswered questions:</strong> ${unanswered}</p>`;
+    }
+    
+    document.getElementById('submitSummary').innerHTML = summaryHtml;
+    
+    const modal = new bootstrap.Modal(document.getElementById('submitModal'));
+    modal.show();
+    
+    return false; // Prevent form submission
+}
+
+function submitQuiz() {
+    clearInterval(timerInterval);
+    document.getElementById('quizForm').submit();
+}
+
+function autoSubmitQuiz() {
+    alert('Time is up! Your quiz will be submitted automatically.');
+    submitQuiz();
+}
+
+// Warn before leaving page
+window.addEventListener('beforeunload', function(e) {
+    if (answeredQuestions.size > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+</script>
+{% endblock %}

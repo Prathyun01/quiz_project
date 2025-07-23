@@ -1,0 +1,115 @@
+{% extends 'document_manager/base_document.html' %}
+{% load static %}
+{% load humanize %}
+{% load document_extras %}
+
+{% block title %}My Documents - Quiz Platform{% endblock %}
+
+{% block content %}
+<div class="container px-4">
+    <!-- Header -->
+    <div class="glass-card p-4 mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="text-glass mb-2">
+                    <i class="fas fa-folder-open me-3 text-gradient"></i>
+                    My Documents
+                </h1>
+                <p class="text-glass-muted mb-0">
+                    Manage your uploaded documents and track their performance
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'document_manager:upload_document' %}" class="btn btn-3d">
+                    <i class="fas fa-plus me-2"></i>Upload New Document
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj.object_list %}
+    <!-- Documents Table -->
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Category</th>
+                        <th>Access Level</th>
+                        <th class="text-center">Downloads</th>
+                        <th class="text-center">Views</th>
+                        <th class="text-center">Rating</th>
+                        <th>Upload Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for document in page_obj.object_list %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="{{ document.file_extension|file_icon_class }} me-3"></i>
+                                <div>
+                                    <strong class="text-glass">{{ document.title|truncatechars:40 }}</strong>
+                                    <br>
+                                    <small class="text-glass-muted">{{ document.file_size|format_file_size }}</small>
+                                    {% if document.is_featured %}
+                                    <span class="badge bg-warning ms-2">Featured</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-glass">{{ document.category.name }}</td>
+                        <td>
+                            <span class="badge {{ document.access_level|access_level_badge_class }}">
+                                {{ document.get_access_level_display }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info">{{ document.download_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">{{ document.view_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            {{ document.average_rating|stars_display }}
+                            <br>
+                            <small>({{ document.average_rating|floatformat:1 }})</small>
+                        </td>
+                        <td class="text-glass-muted">{{ document.created_at|naturaltime }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'document_manager:document_detail' document_id=document.id %}" 
+                                   class="btn btn-outline-light" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% share_buttons document user %}
+                                <a href="{% document_download_url document %}" 
+                                   class="btn btn-outline-success" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- No Documents -->
+    <div class="glass-card p-5 text-center">
+        <i class="fas fa-folder-open fa-4x text-muted mb-4"></i>
+        <h4 class="text-glass mb-3">No Documents Uploaded</h4>
+        <p class="text-glass-muted mb-4">
+            You haven't uploaded any documents yet. Start sharing your knowledge with the community!
+        </p>
+        <a href="{% url 'document_manager:upload_document' %}" class="btn btn-3d">
+            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Your First Document
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

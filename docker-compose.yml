@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - media_volume:/app/media
+    environment:
+      - DEBUG=1
+    depends_on:
+      - redis
+      - db
+    command: python manage.py runserver 0.0.0.0:8000
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=quiz_project
+      - POSTGRES_USER=quiz_user
+      - POSTGRES_PASSWORD=quiz_password
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A quiz_project worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+    depends_on:
+      - redis
+      - db
+
+  celery-beat:
+    build: .
+    command: celery -A quiz_project beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+    depends_on:
+      - redis
+      - db
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - media_volume:/app/media
+      - static_volume:/app/staticfiles
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  media_volume:
+  static_volume:

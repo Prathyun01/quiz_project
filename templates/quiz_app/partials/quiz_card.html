@@ -1,0 +1,66 @@
+{% load quiz_extras %}
+
+<div class="card quiz-card h-100 position-relative">
+    <!-- AI Provider Badge -->
+    <div class="provider-badge">
+        {% ai_provider_badge quiz.ai_provider %}
+    </div>
+
+    {% if quiz.featured_image %}
+        <img src="{{ quiz.featured_image.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ quiz.title }}">
+    {% else %}
+        <div class="card-img-top bg-gradient-{{ quiz.category.color|slice:"1:" }} d-flex align-items-center justify-content-center" style="height: 180px; background: {{ quiz.category.color }}22;">
+            <i class="{{ quiz.category.icon }} fa-3x" style="color: {{ quiz.category.color }};"></i>
+        </div>
+    {% endif %}
+
+    <div class="card-body d-flex flex-column">
+        <div class="mb-2">
+            <span class="ai-badge">
+                <i class="fas fa-robot"></i> AI Generated
+            </span>
+            <span class="badge" style="background-color: {{ quiz.category.color }};">
+                {{ quiz.category.name }}
+            </span>
+        </div>
+
+        <h5 class="card-title">{{ quiz.title }}</h5>
+        <p class="card-text text-muted">{{ quiz.description|truncatewords:15 }}</p>
+
+        <div class="mt-auto">
+            <div class="row text-center small text-muted mb-3">
+                <div class="col-4">
+                    <i class="fas fa-question-circle"></i><br>
+                    {{ quiz.question_count }} Questions
+                </div>
+                <div class="col-4">
+                    <i class="fas fa-clock"></i><br>
+                    {{ quiz.time_limit }} mins
+                </div>
+                <div class="col-4">
+                    {% difficulty_badge quiz.difficulty %}
+                </div>
+            </div>
+
+            {% if show_actions %}
+            <div class="d-grid gap-2">
+                <a href="{% url 'quiz_app:quiz_detail' quiz_id=quiz.id %}" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> View Quiz
+                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'quiz_app:take_quiz' quiz_id=quiz.id %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-play"></i> Take Quiz
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-footer bg-transparent border-0">
+        <small class="text-muted">
+            <i class="fas fa-user"></i> Created by {{ quiz.created_by.username }}
+            <span class="float-end">{{ quiz.created_at|date:"M d, Y" }}</span>
+        </small>
+    </div>
+</div>

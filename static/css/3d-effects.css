@@ -1,0 +1,641 @@
+/* 3D Effects and Animations for AI Quiz App */
+
+/* CSS Variables for 3D Effects */
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #f59e0b;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    
+    /* 3D Effect Variables */
+    --shadow-3d: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --shadow-3d-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+    --perspective: 1000px;
+    --transform-duration: 0.3s;
+}
+
+/* Global 3D Canvas Background */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* 3D Floating Elements */
+.floating {
+    animation: floating 6s ease-in-out infinite;
+    transform-style: preserve-3d;
+}
+
+@keyframes floating {
+    0%, 100% { 
+        transform: translateY(0px) rotateX(0deg) rotateY(0deg); 
+    }
+    25% { 
+        transform: translateY(-10px) rotateX(1deg) rotateY(1deg); 
+    }
+    50% { 
+        transform: translateY(-20px) rotateX(0deg) rotateY(2deg); 
+    }
+    75% { 
+        transform: translateY(-10px) rotateX(-1deg) rotateY(1deg); 
+    }
+}
+
+/* 3D Cards */
+.quiz-card {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 2rem;
+    margin: 1rem 0;
+    box-shadow: var(--shadow-3d);
+    transform: perspective(var(--perspective)) rotateX(0deg) rotateY(0deg);
+    transition: all var(--transform-duration) cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quiz-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transition: left 0.5s;
+    z-index: 1;
+}
+
+.quiz-card:hover {
+    transform: perspective(var(--perspective)) rotateX(5deg) rotateY(5deg) translateY(-10px);
+    box-shadow: var(--shadow-3d-hover);
+    border-color: var(--primary-color);
+}
+
+.quiz-card:hover::before {
+    left: 100%;
+}
+
+/* 3D Buttons */
+.btn-3d {
+    position: relative;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all var(--transform-duration) ease;
+    overflow: hidden;
+    cursor: pointer;
+    transform: perspective(var(--perspective)) rotateX(0deg) rotateY(0deg);
+    box-shadow: 
+        0 8px 16px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-3d::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.btn-3d:hover {
+    transform: perspective(var(--perspective)) rotateX(-2deg) rotateY(2deg) translateY(-3px);
+    box-shadow: 
+        0 15px 30px rgba(99, 102, 241, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-3d:hover::before {
+    left: 100%;
+}
+
+.btn-3d:active {
+    transform: perspective(var(--perspective)) rotateX(1deg) rotateY(-1deg) translateY(-1px);
+    box-shadow: 
+        0 5px 15px rgba(99, 102, 241, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 3D Navigation */
+.navbar-custom {
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all var(--transform-duration) ease;
+}
+
+/* 3D Profile Pictures */
+.profile-pic-small, .profile-pic-large {
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    transition: all var(--transform-duration) ease;
+    transform: perspective(var(--perspective)) rotateX(0deg) rotateY(0deg);
+}
+
+.profile-pic-small {
+    width: 40px;
+    height: 40px;
+}
+
+.profile-pic-large {
+    width: 120px;
+    height: 120px;
+}
+
+.profile-pic-small:hover, .profile-pic-large:hover {
+    transform: perspective(var(--perspective)) rotateX(5deg) rotateY(5deg) scale(1.05);
+    box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.profile-pic-placeholder, .profile-pic-placeholder-large {
+    display: inline-flex;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    box-shadow: 
+        0 8px 16px rgba(99, 102, 241, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    transition: all var(--transform-duration) ease;
+    transform: perspective(var(--perspective)) rotateX(0deg) rotateY(0deg);
+}
+
+.profile-pic-placeholder {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+}
+
+.profile-pic-placeholder-large {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+}
+
+/* 3D Form Elements */
+.form-control, .form-select {
+    transition: all var(--transform-duration) ease;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    transform: perspective(var(--perspective)) rotateX(0deg);
+}
+
+.form-control:focus, .form-select:focus {
+    transform: perspective(var(--perspective)) rotateX(2deg) translateY(-2px);
+    box-shadow: 
+        0 8px 25px rgba(99, 102, 241, 0.2),
+        inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 3D Alert Messages */
+.alert {
+    border-radius: 16px;
+    border: none;
+    box-shadow: var(--shadow-3d);
+    transform: perspective(var(--perspective)) rotateX(0deg);
+    transition: all var(--transform-duration) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.alert::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, currentColor, transparent);
+}
+
+.alert:hover {
+    transform: perspective(var(--perspective)) rotateX(2deg) translateY(-2px);
+    box-shadow: var(--shadow-3d-hover);
+}
+
+/* 3D Modal Dialogs */
+.modal-content {
+    border-radius: 24px;
+    border: none;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    transform: perspective(var(--perspective)) rotateX(0deg) scale(1);
+    transition: all var(--transform-duration) ease;
+}
+
+.modal.show .modal-content {
+    animation: modalIn 0.5s ease-out;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: perspective(var(--perspective)) rotateX(-10deg) scale(0.9) translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: perspective(var(--perspective)) rotateX(0deg) scale(1) translateY(0);
+    }
+}
+
+/* 3D Tables */
+.table {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-3d);
+    backdrop-filter: blur(10px);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    border: none;
+    position: relative;
+    transform: perspective(var(--perspective)) rotateX(0deg);
+    transition: all var(--transform-duration) ease;
+}
+
+.table thead th:hover {
+    transform: perspective(var(--perspective)) rotateX(2deg);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.table tbody tr {
+    transition: all var(--transform-duration) ease;
+    transform: perspective(var(--perspective)) rotateX(0deg);
+}
+
+.table tbody tr:hover {
+    transform: perspective(var(--perspective)) rotateX(1deg) translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 3D Loading Animations */
+.loading-3d {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotate3d 2s linear infinite;
+}
+
+.loading-3d::before,
+.loading-3d::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid var(--primary-color);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+.loading-3d::after {
+    transform: rotateY(90deg);
+    border-color: var(--secondary-color);
+    border-top-color: transparent;
+    animation-delay: -0.5s;
+}
+
+@keyframes rotate3d {
+    0% { transform: rotateY(0deg) rotateX(0deg); }
+    100% { transform: rotateY(360deg) rotateX(360deg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 3D Progress Bars */
+.progress {
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: perspective(var(--perspective)) rotateX(0deg);
+    transition: all var(--transform-duration) ease;
+}
+
+.progress:hover {
+    transform: perspective(var(--perspective)) rotateX(2deg);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    box-shadow: 
+        0 2px 4px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* 3D Badges */
+.badge {
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: perspective(var(--perspective)) rotateX(0deg);
+    transition: all var(--transform-duration) ease;
+}
+
+.badge:hover {
+    transform: perspective(var(--perspective)) rotateX(5deg) translateY(-2px);
+    box-shadow: 
+        0 8px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* 3D Dropdown Menus */
+.dropdown-menu {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    transform: perspective(var(--perspective)) rotateX(-10deg) scale(0.95);
+    transition: all var(--transform-duration) ease;
+    opacity: 0;
+}
+
+.dropdown-menu.show {
+    transform: perspective(var(--perspective)) rotateX(0deg) scale(1);
+    opacity: 1;
+}
+
+.dropdown-item {
+    transition: all var(--transform-duration) ease;
+    border-radius: 8px;
+    margin: 2px 8px;
+    transform: perspective(var(--perspective)) rotateX(0deg);
+}
+
+.dropdown-item:hover {
+    transform: perspective(var(--perspective)) rotateX(2deg) translateX(4px);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+/* 3D Pagination */
+.pagination .page-link {
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    margin: 0 4px;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: perspective(var(--perspective)) rotateX(0deg);
+    transition: all var(--transform-duration) ease;
+}
+
+.pagination .page-link:hover {
+    transform: perspective(var(--perspective)) rotateX(5deg) translateY(-2px);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 
+        0 8px 16px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: var(--primary-color);
+    transform: perspective(var(--perspective)) rotateX(2deg);
+}
+
+/* 3D Tabs */
+.nav-tabs .nav-link {
+    border-radius: 12px 12px 0 0;
+    border: 2px solid var(--border-color);
+    border-bottom: none;
+    transform: perspective(var(--perspective)) rotateX(0deg);
+    transition: all var(--transform-duration) ease;
+    margin-right: 4px;
+}
+
+.nav-tabs .nav-link:hover {
+    transform: perspective(var(--perspective)) rotateX(5deg) translateY(-2px);
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: perspective(var(--perspective)) rotateX(2deg) translateY(-1px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2);
+}
+
+/* 3D Quiz Results */
+.quiz-results-card {
+    background: var(--bg-secondary);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 
+        var(--shadow-3d),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: perspective(var(--perspective)) rotateX(0deg) rotateY(0deg);
+    transition: all var(--transform-duration) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.quiz-results-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+}
+
+.quiz-results-card:hover {
+    transform: perspective(var(--perspective)) rotateX(2deg) rotateY(2deg) translateY(-5px);
+    box-shadow: 
+        var(--shadow-3d-hover),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 3D Score Display */
+.score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 2rem auto;
+    box-shadow: 
+        0 15px 30px rgba(99, 102, 241, 0.4),
+        inset 0 4px 8px rgba(255, 255, 255, 0.2);
+    transform: perspective(var(--perspective)) rotateX(0deg) rotateY(0deg);
+    transition: all var(--transform-duration) ease;
+    position: relative;
+}
+
+.score-circle::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+    animation: borderRotate 3s linear infinite;
+    z-index: -1;
+}
+
+@keyframes borderRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.score-circle:hover {
+    transform: perspective(var(--perspective)) rotateX(10deg) rotateY(10deg) scale(1.05);
+    box-shadow: 
+        0 25px 50px rgba(99, 102, 241, 0.5),
+        inset 0 4px 8px rgba(255, 255, 255, 0.3);
+}
+
+/* 3D Responsive Design */
+@media (max-width: 768px) {
+    :root {
+        --perspective: 800px;
+        --transform-duration: 0.2s;
+    }
+    
+    .quiz-card:hover {
+        transform: perspective(var(--perspective)) rotateX(2deg) rotateY(2deg) translateY(-5px);
+    }
+    
+    .btn-3d:hover {
+        transform: perspective(var(--perspective)) rotateX(-1deg) rotateY(1deg) translateY(-2px);
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .floating {
+        animation: none;
+    }
+    
+    .quiz-card, .btn-3d, .profile-pic-small, .profile-pic-large {
+        transform: none !important;
+    }
+}
+
+/* High Performance Mode for Low-End Devices */
+@media (max-width: 480px) {
+    .quiz-card::before,
+    .btn-3d::before,
+    .progress-bar::before {
+        display: none;
+    }
+    
+    .quiz-results-card::before {
+        display: none;
+    }
+    
+    .score-circle::before {
+        display: none;
+    }
+}
+
+/* 3D Print Styles */
+@media print {
+    .quiz-card, .btn-3d, .modal-content {
+        box-shadow: none !important;
+        transform: none !important;
+        background: white !important;
+        color: black !important;
+    }
+    
+    #bg-canvas {
+        display: none !important;
+    }
+}

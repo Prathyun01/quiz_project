@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messages - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/messaging.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Messages Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="text-glass mb-2">
+                            <i class="fas fa-inbox me-3 text-gradient"></i>Messages
+                        </h1>
+                        <p class="text-glass-muted mb-0">
+                            You have {{ total_unread }} unread message{{ total_unread|pluralize }}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'messaging:start_conversation' %}" class="btn btn-3d me-2">
+                            <i class="fas fa-plus me-2"></i>New Message
+                        </a>
+                        <a href="{% url 'messaging:create_group' %}" class="btn btn-outline-light">
+                            <i class="fas fa-users me-2"></i>Create Group
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-3">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="?filter=all" class="btn {% if not filter_type or filter_type == 'all' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-list me-1"></i>All
+                    </a>
+                    <a href="?filter=unread" class="btn {% if filter_type == 'unread' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-envelope me-1"></i>Unread
+                    </a>
+                    <a href="?filter=groups" class="btn {% if filter_type == 'groups' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-users me-1"></i>Groups
+                    </a>
+                    <a href="?filter=direct" class="btn {% if filter_type == 'direct' %}btn-primary{% else %}btn-outline-light{% endif %} btn-sm">
+                        <i class="fas fa-user me-1"></i>Direct
+                    </a>
+                    
+                    <div class="ms-auto">
+                        <form method="get" class="d-flex">
+                            <input type="hidden" name="filter" value="{{ filter_type }}">
+                            <input type="text" name="search" value="{{ search_query }}" 
+                                   class="form-control form-control-sm me-2" 
+                                   placeholder="Search conversations..." style="width: 200px;">
+                            <button type="submit" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversations List -->
+    <div class="row">
+        <div class="col-12">
+            {% if conversations %}
+            <div class="conversation-list">
+                {% for conversation in conversations %}
+                <div class="conversation-item {% if conversation.unread_count > 0 %}unread{% endif %}" 
+                     onclick="openConversation('{{ conversation.id }}')">
+                    <div class="row align-items-center">
+                        <div class="col-md-1">
+                            {% if conversation.is_group %}
+                            <div class="group-avatar">
+                                <i class="fas fa-users fa-2x text-gradient"></i>
+                            </div>
+                            {% else %}
+                            {% with conversation.participants.all|first as other_user %}
+                            {% if other_user.id != user.id %}
+                            <img src="{{ other_user.profile_picture.url }}" 
+                                 alt="{{ other_user.display_name }}" 
+                                 class="conversation-avatar">
+                            {% else %}
+                            {% with conversation.participants.all|last as other_user %}
+                            <img src="{{ other_user.profile_picture.url }}" 
+                                 alt="{{ other_user.display_name }}" 
+                                 class="conversation-avatar">
+                            {% endwith %}
+                            {% endif %}
+                            {% endwith %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="conversation-info">
+                                <h6 class="text-glass mb-1">
+                                    {% if conversation.is_group %}
+                                    {{ conversation.group_name }}
+                                    {% else %}
+                                    {% with conversation.participants.all as participants %}
+                                    {% for participant in participants %}
+                                    {% if participant.id != user.id %}
+                                    {{ participant.display_name }}
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endwith %}
+                                    {% endif %}
+                                </h6>
+                                
+                                {% if conversation.last_message %}
+                                <p class="text-glass-muted mb-0 small">
+                                    {% if conversation.last_message.sender.id == user.id %}
+                                    <i class="fas fa-reply me-1"></i>You: 
+                                    {% else %}
+                                    {{ conversation.last_message.sender.display_name }}: 
+                                    {% endif %}
+                                    
+                                    {% if conversation.last_message.message_type == 'file' %}
+                                    <i class="fas fa-file me-1"></i>Sent a file
+                                    {% elif conversation.last_message.message_type == 'image' %}
+                                    <i class="fas fa-image me-1"></i>Sent an image
+                                    {% else %}
+                                    {{ conversation.last_message.content|truncatewords:8 }}
+                                    {% endif %}
+                                </p>
+                                {% else %}
+                                <p class="text-glass-muted mb-0 small">No messages yet</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2 text-end">
+                            {% if conversation.last_message %}
+                            <small class="text-glass-muted d-block">
+                                {{ conversation.last_message.created_at|timesince }} ago
+                            </small>
+                            {% endif %}
+                            
+                            {% if conversation.unread_count > 0 %}
+                            <span class="unread-badge">{{ conversation.unread_count }}</span>
+                            {% endif %}
+                            
+                            {% if conversation.is_group %}
+                            <div class="conversation-meta mt-1">
+                                <small class="text-glass-muted">
+                                    <i class="fas fa-users me-1"></i>{{ conversation.participants.count }} members
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-1 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-light" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu glass-card">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'messaging:conversation_detail' conversation_id=conversation.id %}">
+                                            <i class="fas fa-eye me-2"></i>Open
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'messaging:conversation_settings' conversation_id=conversation.id %}">
+                                            <i class="fas fa-cog me-2"></i>Settings
+                                        </a>
+                                    </li>
+                                    {% if conversation.unread_count > 0 %}
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="markAsRead('{{ conversation.id }}')">
+                                            <i class="fas fa-check me-2"></i>Mark as Read
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="glass-card p-3">
+                        <nav aria-label="Conversations pagination">
+                            <ul class="pagination pagination-3d justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="glass-card p-5 text-center">
+                <i class="fas fa-inbox fa-3x text-gradient mb-3"></i>
+                <h4 class="text-glass mb-2">No conversations yet</h4>
+                <p class="text-glass-muted mb-3">Start a conversation with someone to see it here.</p>
+                <a href="{% url 'messaging:start_conversation' %}" class="btn btn-3d">
+                    <i class="fas fa-plus me-2"></i>Start New Conversation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openConversation(conversationId) {
+    window.location.href = `/messages/conversation/${conversationId}/`;
+}
+
+function markAsRead(conversationId) {
+    fetch('{% url "messaging:ajax_mark_as_read" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            conversation_id: conversationId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// Auto-refresh conversations every 30 seconds
+setInterval(() => {
+    if (!document.hidden) {
+        // Only refresh if no modals are open
+        if (!document.querySelector('.modal.show')) {
+            location.reload();
+        }
+    }
+}, 30000);
+</script>
+{% endblock %}

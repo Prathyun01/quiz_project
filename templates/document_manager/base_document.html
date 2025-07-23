@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="{% static 'css/document-manager.css' %}" rel="stylesheet">
+<style>
+.document-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.document-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.file-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.pdf { color: #dc3545; }
+.doc { color: #007bff; }
+.ppt { color: #fd7e14; }
+.txt { color: #6c757d; }
+
+.share-modal .modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+}
+
+.copy-link-btn {
+    transition: all 0.3s ease;
+}
+
+.copy-link-btn:hover {
+    background: var(--accent-color);
+    color: white;
+}
+
+.stats-badge {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

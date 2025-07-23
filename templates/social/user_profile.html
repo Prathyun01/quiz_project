@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.display_name }} - Profile{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Profile Cover -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="profile-cover">
+                {% if profile_user.cover_photo %}
+                <img src="{{ profile_user.cover_photo.url }}" alt="Cover" 
+                     class="w-100 h-100" style="object-fit: cover;">
+                {% endif %}
+            </div>
+            <div class="profile-info">
+                <div class="profile-avatar-large">
+                    <img src="{{ profile_user.profile_picture.url }}" 
+                         alt="{{ profile_user.display_name }}"
+                         class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                </div>
+                <h2 class="text-glass mt-3 mb-1">{{ profile_user.display_name }}</h2>
+                <p class="text-glass-muted mb-3">@{{ profile_user.username }}</p>
+                
+                {% if profile_user.bio %}
+                <p class="text-glass mb-3">{{ profile_user.bio }}</p>
+                {% endif %}
+                
+                <div class="profile-meta mb-3">
+                    {% if profile_user.college %}
+                    <span class="text-glass-muted me-3">
+                        <i class="fas fa-university me-1"></i>{{ profile_user.college.name }}
+                    </span>
+                    {% endif %}
+                    <span class="text-glass-muted">
+                        <i class="fas fa-calendar me-1"></i>Joined {{ profile_user.date_joined|date:"M Y" }}
+                    </span>
+                </div>
+                
+                <div class="social-stats mb-4">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ followers_count }}</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ following_count }}</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ profile_user.total_quiz_attempts }}</div>
+                        <div class="stat-label">Quizzes</div>
+                    </div>
+                </div>
+                
+                {% if not is_own_profile %}
+                <div class="profile-actions">
+                    <button class="follow-btn-3d {% if is_following %}following{% endif %}" 
+                            onclick="followUser('{{ profile_user.id }}', this)">
+                        {% if is_following %}
+                        <i class="fas fa-user-check me-2"></i>Following
+                        {% else %}
+                        <i class="fas fa-user-plus me-2"></i>Follow
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'messaging:start_conversation' %}?user={{ profile_user.id }}" 
+                       class="btn btn-outline-light ms-2">
+                        <i class="fas fa-message me-2"></i>Message
+                    </a>
+                </div>
+                {% else %}
+                <div class="profile-actions">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-3d">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Quiz Activity -->
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4">
+                <h5 class="text-glass mb-3">Quiz Activity</h5>
+                {% if recent_attempts %}
+                {% for attempt in recent_attempts %}
+                <div class="activity-card">
+                    <div class="d-flex align-items-center">
+                        <div class="activity-icon activity-quiz me-3">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="text-glass mb-1">Completed {{ attempt.quiz.title }}</h6>
+                            <div class="d-flex align-items-center">
+                                <span class="badge grade-{{ attempt.grade|lower }} me-2">{{ attempt.grade }}</span>
+                                <small class="text-glass-muted">{{ attempt.percentage_score|floatformat:1 }}% • {{ attempt.completed_at|timesince }} ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-line fa-3x text-gradient mb-3"></i>
+                    <p class="text-glass-muted">
+                        {% if is_own_profile %}You haven't taken any quizzes yet{% else %}No quiz activity to show{% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Achievements & Stats -->
+        <div class="col-lg-4">
+            <!-- Achievements -->
+            <div class="glass-card p-4 mb-4">
+                <h6 class="text-glass mb-3">Achievements</h6>
+                {% if achievements %}
+                <div class="achievement-grid">
+                    {% for achievement in achievements %}
+                    <div class="achievement-badge">
+                        <div class="achievement-icon">{{ achievement.achievement.icon }}</div>
+                        <div class="achievement-title">{{ achievement.achievement.name }}</div>
+                        <div class="achievement-date">{{ achievement.earned_at|date:"M d" }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-medal fa-2x text-gradient mb-2"></i>
+                    <p class="text-glass-muted small">No achievements yet</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="glass-card p-4">
+                <h6 class="text-glass mb-3">Recent Activity</h6>
+                {% if feed_activities %}
+                {% for activity in feed_activities %}
+                <div class="activity-item small mb-2">
+                    <i class="fas fa-circle me-2 text-gradient" style="font-size: 0.5rem;"></i>
+                    <span class="text-glass-muted">{{ activity.title }}</span>
+                    <small class="text-glass-muted d-block ms-3">{{ activity.created_at|timesince }} ago</small>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-clock fa-2x text-gradient mb-2"></i>
+                    <p class="text-glass-muted small">No recent activity</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function followUser(userId, buttonElement) {
+    const isFollowing = buttonElement.classList.contains('following');
+    const action = isFollowing ? 'unfollow' : 'follow';
+    
+    buttonElement.disabled = true;
+    const originalContent = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    fetch('{% url "social:follow_user" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (action === 'follow') {
+                buttonElement.classList.add('following');
+                buttonElement.innerHTML = '<i class="fas fa-user-check me-2"></i>Following';
+            } else {
+                buttonElement.classList.remove('following');
+                buttonElement.innerHTML = '<i class="fas fa-user-plus me-2"></i>Follow';
+            }
+            
+            // Update follower count
+            const followerStat = document.querySelector('.stat-item .stat-number');
+            if (followerStat) {
+                const currentCount = parseInt(followerStat.textContent);
+                followerStat.textContent = action === 'follow' ? currentCount + 1 : currentCount - 1;
+            }
+        }
+    })
+    .finally(() => {
+        buttonElement.disabled = false;
+    });
+}
+</script>
+{% endblock %}
