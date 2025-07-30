@@ -15,6 +15,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.railway.app', '.ngrok-free.app']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://80f9901ce10d.ngrok-free.app',
+    'https://quizproject-production.up.railway.app',
     'https://*.ngrok-free.app',  # For wildcard support
 ]
 
