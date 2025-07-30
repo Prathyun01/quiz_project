@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Quiz Dashboard - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+        text-align: center;
+        padding: 25px 15px;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .quick-action-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+        text-align: center;
+        padding: 30px 20px;
+        cursor: pointer;
+    }
+    .quick-action-card:hover {
+        transform: translateY(-5px);
+        text-decoration: none;
+    }
+    .recent-item {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+        transition: transform 0.2s;
+    }
+    .recent-item:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-6 mb-3">
+                    <i class="fas fa-tools"></i> Admin Quiz Dashboard
+                </h1>
+                <p class="lead">Manage your manual quizzes, questions, and track performance.</p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-user-cog fa-5x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card stat-card bg-primary text-white">
+                <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                <h3>{{ stats.total_quizzes }}</h3>
+                <p class="mb-0">Total Quizzes</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card stat-card bg-success text-white">
+                <i class="fas fa-eye fa-3x mb-3"></i>
+                <h3>{{ stats.published_quizzes }}</h3>
+                <p class="mb-0">Published</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card stat-card bg-warning text-white">
+                <i class="fas fa-edit fa-3x mb-3"></i>
+                <h3>{{ stats.draft_quizzes }}</h3>
+                <p class="mb-0">Drafts</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card stat-card bg-info text-white">
+                <i class="fas fa-question-circle fa-3x mb-3"></i>
+                <h3>{{ stats.total_questions }}</h3>
+                <p class="mb-0">Questions Created</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4><i class="fas fa-bolt"></i> Quick Actions</h4>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'admin_quiz:create_quiz' %}" class="text-decoration-none">
+                <div class="card quick-action-card bg-primary text-white">
+                    <i class="fas fa-plus-circle fa-3x mb-3"></i>
+                    <h5>Create New Quiz</h5>
+                    <p class="mb-0">Start building a new quiz</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'admin_quiz:quiz_list' %}" class="text-decoration-none">
+                <div class="card quick-action-card bg-success text-white">
+                    <i class="fas fa-list fa-3x mb-3"></i>
+                    <h5>Manage Quizzes</h5>
+                    <p class="mb-0">Edit existing quizzes</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'admin_quiz:manage_categories' %}" class="text-decoration-none">
+                <div class="card quick-action-card bg-info text-white">
+                    <i class="fas fa-tags fa-3x mb-3"></i>
+                    <h5>Categories</h5>
+                    <p class="mb-0">Manage quiz categories</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'quiz_app:quiz_list' %}" class="text-decoration-none">
+                <div class="card quick-action-card bg-warning text-white">
+                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    <h5>View Analytics</h5>
+                    <p class="mb-0">Check quiz performance</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Quizzes -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-clock"></i> Recent Quizzes</h5>
+                    <a href="{% url 'admin_quiz:quiz_list' %}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_quizzes %}
+                        {% for quiz in recent_quizzes %}
+                        <div class="recent-item card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'admin_quiz:quiz_detail' quiz_id=quiz.id %}" 
+                                               class="text-decoration-none">
+                                                {{ quiz.title }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">
+                                            {% if quiz.category %}
+                                                <i class="{{ quiz.category.icon }}"></i> {{ quiz.category.name }}
+                                            {% else %}
+                                                <i class="fas fa-folder"></i> Uncategorized
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% if quiz.status == 'published' %}
+                                            <span class="badge bg-success">Published</span>
+                                        {% elif quiz.status == 'draft' %}
+                                            <span class="badge bg-warning">Draft</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Archived</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <small class="text-muted">
+                                            {{ quiz.question_count }} questions
+                                        </small>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <a href="{% url 'admin_quiz:quiz_detail' quiz_id=quiz.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            Manage
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> 
+                                            Updated {{ quiz.updated_at|date:"M d, Y H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h5>No Quizzes Created Yet</h5>
+                            <p class="text-muted">Create your first manual quiz to get started!</p>
+                            <a href="{% url 'admin_quiz:create_quiz' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Quiz
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attempts -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-users"></i> Recent Quiz Attempts</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_attempts %}
+                        {% for attempt in recent_attempts %}
+                        <div class="card border-0 bg-light mb-3">
+                            <div class="card-body p-3">
+                                <h6 class="card-title">{{ attempt.user.username }}</h6>
+                                <p class="card-text small text-muted">
+                                    {{ attempt.quiz.title|truncatechars:30 }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        {{ attempt.started_at|date:"M d, H:i" }}
+                                    </small>
+                                    {% if attempt.status == 'completed' %}
+                                        <span class="badge bg-success">{{ attempt.percentage_score|floatformat:0 }}%</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">{{ attempt.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No quiz attempts yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-info-circle"></i> System Info</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Attempts:</span>
+                        <strong>{{ stats.total_attempts }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Active Quizzes:</span>
+                        <strong>{{ stats.published_quizzes }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Questions Created:</span>
+                        <strong>{{ stats.total_questions }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

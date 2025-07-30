@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Question - {{ quiz.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-header {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .form-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px;
+    }
+    .question-type-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .type-option {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .type-option:hover, .type-option.selected {
+        border-color: #007bff;
+        background-color: #e3f2fd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'admin_quiz:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'admin_quiz:quiz_detail' quiz_id=quiz.id %}">{{ quiz.title|truncatechars:30 }}</a></li>
+            <li class="breadcrumb-item active">Add Question</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="question-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2><i class="fas fa-plus-circle"></i> Add New Question</h2>
+                <p class="lead mb-0">Create a question for: {{ quiz.title }}</p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-question-circle fa-4x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <form method="post" enctype="multipart/form-data" id="questionForm">
+                    {% csrf_token %}
+                    {% crispy form %}
+                </form>
+            </div>
+
+            <!-- Question Type Guide -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-lightbulb"></i> Question Type Guide</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-list"></i> Multiple Choice</h6>
+                            <p class="small text-muted">Present 2-4 options with one correct answer. Great for testing specific knowledge.</p>
+                            <div class="example bg-light p-2 rounded">
+                                <strong>Example:</strong> What is the capital of France?<br>
+                                A) London B) Berlin C) Paris D) Madrid
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-check-square"></i> True/False</h6>
+                            <p class="small text-muted">Simple binary choice. Perfect for testing factual statements.</p>
+                            <div class="example bg-light p-2 rounded">
+                                <strong>Example:</strong> The Earth is round.<br>
+                                True / False
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-tips"></i> Writing Great Questions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="fas fa-check"></i> Best Practices</h6>
+                            <ul class="small">
+                                <li>Use clear, concise language</li>
+                                <li>Make questions specific</li>
+                                <li>Avoid negative phrasing</li>
+                                <li>Include helpful explanations</li>
+                                <li>Test one concept per question</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger"><i class="fas fa-times"></i> Avoid</h6>
+                            <ul class="small">
+                                <li>Ambiguous wording</li>
+                                <li>Trick questions</li>
+                                <li>Overly complex sentences</li>
+                                <li>Cultural assumptions</li>
+                                <li>Multiple correct answers (unless intended)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle form submission
+    const form = document.getElementById('questionForm');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = form.querySelector('input[type="submit"]');
+        submitBtn.value = 'Saving Question...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

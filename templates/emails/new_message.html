@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Message</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+        .message-preview { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #667eea; }
+        .btn { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 New Message</h1>
+            <p>You have a new message!</p>
+        </div>
+        <div class="content">
+            <h2>Hello {{ recipient.display_name }}!</h2>
+            <p>You have received a new message from <strong>{{ sender.display_name }}</strong>:</p>
+            
+            <div class="message-preview">
+                <p><strong>From:</strong> {{ sender.display_name }} (@{{ sender.username }})</p>
+                {% if conversation.is_group %}
+                <p><strong>In:</strong> {{ conversation.group_name }}</p>
+                {% endif %}
+                <p><strong>Message:</strong></p>
+                <p>{{ message.content|truncatewords:20 }}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ message_url }}" class="btn">Read Full Message</a>
+            </div>
+            
+            <p>Stay connected with your learning community!</p>
+            <p><strong>The Quiz Platform Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>© 2024 Quiz Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,334 @@
+/* Social features 3D styles */
+.user-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.user-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(240, 147, 251, 0.1) 0%, transparent 70%);
+    transition: all 0.5s;
+    opacity: 0;
+}
+
+.user-card:hover::before {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.user-card:hover {
+    transform: translateY(-15px) rotateX(5deg);
+    box-shadow: 0 25px 50px rgba(31, 38, 135, 0.5);
+}
+
+.user-avatar-3d {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    margin: 0 auto 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.user-avatar-3d::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+.user-card:hover .user-avatar-3d {
+    transform: scale(1.1) rotateY(10deg);
+    border-color: var(--accent-color);
+    box-shadow: 0 15px 30px rgba(240, 147, 251, 0.4);
+}
+
+.user-card:hover .user-avatar-3d::before {
+    left: 100%;
+}
+
+.follow-btn-3d {
+    background: linear-gradient(135deg, var(--success-color), var(--warning-color));
+    border: none;
+    border-radius: 25px;
+    padding: 12px 30px;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.follow-btn-3d::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.4s;
+    transform: translate(-50%, -50%);
+}
+
+.follow-btn-3d:hover::before {
+    width: 300%;
+    height: 300%;
+}
+
+.follow-btn-3d:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+}
+
+.follow-btn-3d.following {
+    background: linear-gradient(135deg, #e53e3e, #fc8181);
+}
+
+.social-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 1.5rem 0;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    flex: 1;
+    margin: 0 5px;
+}
+
+.stat-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    text-shadow: 0 2px 10px rgba(240, 147, 251, 0.3);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+}
+
+/* Activity feed */
+.activity-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.activity-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 0 2px 2px 0;
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.activity-card:hover::before {
+    transform: scaleY(1);
+}
+
+.activity-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 10px 30px rgba(31, 38, 135, 0.3);
+}
+
+.activity-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-right: 15px;
+}
+
+.activity-quiz { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
+.activity-follow { background: linear-gradient(135deg, var(--success-color), var(--warning-color)); }
+.activity-achievement { background: linear-gradient(135deg, #ffd700, #ffed4a); }
+.activity-share { background: linear-gradient(135deg, var(--accent-color), #e879f9); }
+
+/* Profile cover section */
+.profile-cover {
+    height: 250px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 25px 25px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-cover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="50" r="0.5" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    animation: float 10s ease-in-out infinite;
+}
+
+.profile-info {
+    position: relative;
+    margin-top: -80px;
+    z-index: 2;
+    text-align: center;
+}
+
+.profile-avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 6px solid rgba(255, 255, 255, 0.8);
+    margin: 0 auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s ease;
+}
+
+.profile-avatar-large:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Notification styles */
+.notification-item {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+}
+
+.notification-item.unread {
+    border-left: 4px solid var(--accent-color);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.notification-follow { background: var(--success-color); }
+.notification-quiz { background: var(--primary-color); }
+.notification-achievement { background: #ffd700; }
+.notification-message { background: var(--accent-color); }
+
+/* Achievement badges */
+.achievement-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.achievement-badge {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 1px solid var(--glass-border);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-badge::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+    transform: scale(0);
+    transition: transform 0.5s;
+}
+
+.achievement-badge:hover::before {
+    transform: scale(1);
+}
+
+.achievement-badge:hover {
+    transform: translateY(-10px) rotateY(5deg);
+    box-shadow: 0 20px 40px rgba(255, 215, 0, 0.3);
+}
+
+.achievement-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #ffd700;
+    text-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+.achievement-title {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.achievement-description {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+.achievement-date {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    margin-top: 1rem;
+}

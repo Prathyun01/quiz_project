@@ -1,0 +1,183 @@
+{% extends 'document_manager/base_document.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load document_extras %}
+
+{% block title %}Upload Document - Quiz Platform{% endblock %}
+
+{% block content %}
+<div class="container px-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="glass-card p-4 mb-4">
+                <h1 class="text-glass text-center mb-2">
+                    <i class="fas fa-cloud-upload-alt me-3 text-gradient"></i>
+                    Upload Document
+                </h1>
+                <p class="text-glass-muted text-center mb-0">
+                    Share educational resources with the community
+                </p>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="glass-card p-4">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    {% crispy form %}
+                </form>
+            </div>
+
+            <!-- Upload Guidelines -->
+            <div class="glass-card p-4 mt-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-info-circle me-2"></i>Upload Guidelines
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-glass">Supported Formats:</h6>
+                        <ul class="text-glass-muted">
+                            <li><i class="fas fa-file-pdf text-danger"></i> PDF Documents</li>
+                            <li><i class="fas fa-file-word text-primary"></i> Word Documents (.doc, .docx)</li>
+                            <li><i class="fas fa-file-powerpoint text-warning"></i> PowerPoint (.ppt, .pptx)</li>
+                            <li><i class="fas fa-file-alt text-secondary"></i> Text Files (.txt)</li>
+                            <li><i class="fas fa-file-excel text-success"></i> Excel Files (.xls, .xlsx)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-glass">Requirements:</h6>
+                        <ul class="text-glass-muted">
+                            <li>Maximum file size: 50MB</li>
+                            <li>Educational content only</li>
+                            <li>No copyrighted material without permission</li>
+                            <li>Clear, descriptive titles</li>
+                            <li>Appropriate categorization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Progress Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="text-glass">Uploading Document...</h5>
+                <p class="text-glass-muted">Please wait while we process your file.</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%" id="uploadProgress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    const progressBar = document.getElementById('uploadProgress');
+    
+    // File validation and preview
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const maxSize = 50 * 1024 * 1024; // 50MB
+                if (file.size > maxSize) {
+                    alert('File size exceeds 50MB limit. Please choose a smaller file.');
+                    this.value = '';
+                    return;
+                }
+                
+                // Show file preview
+                showFilePreview(file);
+            }
+        });
+    }
+    
+    function showFilePreview(file) {
+        const previewHtml = `
+            <div class="alert alert-info mt-3" id="filePreview">
+                <h6><i class="fas fa-file me-2"></i>Selected File:</h6>
+                <p class="mb-1"><strong>Name:</strong> ${file.name}</p>
+                <p class="mb-1"><strong>Size:</strong> ${formatFileSize(file.size)}</p>
+                <p class="mb-0"><strong>Type:</strong> ${file.type || 'Unknown'}</p>
+            </div>
+        `;
+        
+        // Remove existing preview
+        const existingPreview = document.getElementById('filePreview');
+        if (existingPreview) {
+            existingPreview.remove();
+        }
+        
+        // Add new preview
+        fileInput.parentNode.insertAdjacentHTML('afterend', previewHtml);
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Form submission with progress
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        // Show upload modal
+        uploadModal.show();
+        
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 500);
+        
+        // Submit form
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            
+            if (response.ok) {
+                setTimeout(() => {
+                    uploadModal.hide();
+                    window.location.href = "{% url 'document_manager:my_documents' %}";
+                }, 1000);
+            } else {
+                throw new Error('Upload failed');
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            uploadModal.hide();
+            alert('Upload failed: ' + error.message);
+        });
+    });
+});
+</script>
+{% endblock %}

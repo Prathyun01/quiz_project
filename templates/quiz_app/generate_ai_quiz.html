@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Generate AI Quiz - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 0;
+        margin-bottom: 40px;
+    }
+    .provider-card {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    .provider-card.available {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+    .provider-card.unavailable {
+        border-color: #dc3545;
+        background-color: #fff5f5;
+        opacity: 0.7;
+    }
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .category-item {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .category-item:hover {
+        border-color: #007bff;
+        background-color: #e3f2fd;
+    }
+    .form-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px;
+    }
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="text-center">
+        <div class="spinner-border spinner-border-lg mb-3" role="status"></div>
+        <h4>Generating your AI quiz...</h4>
+        <p>This may take up to 30 seconds</p>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-robot"></i> Generate AI Quiz
+                </h1>
+                <p class="lead">Create personalized quizzes on any topic using advanced AI technology. Choose from multiple AI providers and built-in categories.</p>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-brain fa-5x opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- AI Provider Status -->
+            <div class="mb-4">
+                <h4><i class="fas fa-server"></i> Available AI Providers</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="provider-card {% if 'gemini' in available_providers %}available{% else %}unavailable{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <i class="fab fa-google fa-2x me-3"></i>
+                                <div>
+                                    <h6>Google Gemini</h6>
+                                    <small class="text-muted">Fast and accurate AI responses</small>
+                                </div>
+                                {% if 'gemini' in available_providers %}
+                                    <i class="fas fa-check-circle text-success ms-auto"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger ms-auto"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="provider-card {% if 'perplexity' in available_providers %}available{% else %}unavailable{% endif %}">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-search fa-2x me-3"></i>
+                                <div>
+                                    <h6>Perplexity AI</h6>
+                                    <small class="text-muted">Real-time search capabilities</small>
+                                </div>
+                                {% if 'perplexity' in available_providers %}
+                                    <i class="fas fa-check-circle text-success ms-auto"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger ms-auto"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Generation Form -->
+            <div class="form-container">
+                <form method="post" id="quiz-generation-form">
+                    {% csrf_token %}
+                    {% crispy form %}
+                </form>
+            </div>
+
+            <!-- Built-in Categories Preview -->
+            <div class="mt-5">
+                <h4><i class="fas fa-th-large"></i> Built-in Categories</h4>
+                <p class="text-muted">Our AI can generate quizzes for these popular categories:</p>
+                <div class="category-grid">
+                    <div class="category-item">
+                        <i class="fas fa-atom text-primary fa-2x mb-2"></i>
+                        <div>Science & Technology</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-landmark text-info fa-2x mb-2"></i>
+                        <div>History</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-globe text-success fa-2x mb-2"></i>
+                        <div>Geography</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-book text-warning fa-2x mb-2"></i>
+                        <div>Literature</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-calculator text-danger fa-2x mb-2"></i>
+                        <div>Mathematics</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-football-ball text-dark fa-2x mb-2"></i>
+                        <div>Sports</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-film text-purple fa-2x mb-2"></i>
+                        <div>Entertainment</div>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-chart-line text-secondary fa-2x mb-2"></i>
+                        <div>Business</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How it Works -->
+            <div class="mt-5">
+                <h4><i class="fas fa-cogs"></i> How It Works</h4>
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-edit fa-2x text-primary"></i>
+                        </div>
+                        <h6>1. Choose Topic</h6>
+                        <p class="text-muted small">Enter your desired quiz topic and select category</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-robot fa-2x text-success"></i>
+                        </div>
+                        <h6>2. AI Generates</h6>
+                        <p class="text-muted small">Our AI creates personalized questions and answers</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-play fa-2x text-info"></i>
+                        </div>
+                        <h6>3. Take Quiz</h6>
+                        <p class="text-muted small">Start your personalized quiz immediately</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('quiz-generation-form');
+    const submitBtn = form.querySelector('input[type="submit"]');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    form.addEventListener('submit', function(e) {
+        submitBtn.value = 'Generating Quiz...';
+        submitBtn.disabled = true;
+        loadingOverlay.style.display = 'flex';
+    });
+});
+</script>
+{% endblock %}

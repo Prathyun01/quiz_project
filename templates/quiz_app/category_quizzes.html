@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quiz_extras %}
+
+{% block title %}{{ category.name }} Quizzes - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-header {
+        background: linear-gradient(135deg, {{ category.color }}22 0%, {{ category.color }}44 100%);
+        border-radius: 20px;
+        padding: 50px 30px;
+        margin-bottom: 40px;
+        text-align: center;
+    }
+    .quiz-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+    .quiz-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .breadcrumb-custom {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-custom">
+            <li class="breadcrumb-item"><a href="{% url 'quiz_app:quiz_list' %}">Quizzes</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'quiz_app:categories' %}">Categories</a></li>
+            <li class="breadcrumb-item active">{{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Category Header -->
+    <div class="category-header">
+        <div class="d-flex justify-content-center align-items-center mb-4">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-4" 
+                 style="width: 100px; height: 100px; background-color: {{ category.color }}; color: white;">
+                <i class="{{ category.icon }} fa-3x"></i>
+            </div>
+            <div class="text-start">
+                <h1 class="display-5 mb-2">{{ category.name }}</h1>
+                <p class="lead text-muted">{{ category.description|default:"Explore AI-generated quizzes in this category" }}</p>
+                {% if category.is_builtin %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-star"></i> Built-in Category
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Category Stats -->
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h3>{{ quizzes|length }}</h3>
+                <p class="text-muted">Available Quizzes</p>
+            </div>
+            <div class="col-md-4">
+                <h3>AI-Powered</h3>
+                <p class="text-muted">Smart Generation</p>
+            </div>
+            <div class="col-md-4">
+                <h3>All Levels</h3>
+                <p class="text-muted">Easy to Hard</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Sort Options -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> {{ category.name }} Quizzes</h5>
+                    <small class="text-muted">{{ page_obj.paginator.count }} total quiz{{ page_obj.paginator.count|pluralize:"es" }}</small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="sortOptions" id="sortNewest" checked>
+                        <label class="btn btn-outline-primary btn-sm" for="sortNewest">
+                            <i class="fas fa-clock"></i> Newest
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="sortOptions" id="sortPopular">
+                        <label class="btn btn-outline-primary btn-sm" for="sortPopular">
+                            <i class="fas fa-fire"></i> Popular
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quizzes Grid -->
+    {% if quizzes %}
+        <div class="row">
+            {% for quiz in quizzes %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                {% render_quiz_card quiz %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Quiz pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                 style="width: 120px; height: 120px; background-color: {{ category.color }}22;">
+                <i class="{{ category.icon }} fa-3x" style="color: {{ category.color }};"></i>
+            </div>
+            <h4>No Quizzes Available Yet</h4>
+            <p class="text-muted">There are no AI-generated quizzes in the {{ category.name }} category at the moment.</p>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'quiz_app:generate_ai_quiz' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Generate First Quiz
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login to Generate Quiz
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Related Categories -->
+    <div class="mt-5">
+        <h4><i class="fas fa-th-large"></i> Explore Other Categories</h4>
+        <div class="row">
+            {% for other_category in categories %}
+                {% if other_category.id != category.id and other_category.quiz_count > 0 %}
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <a href="{% url 'quiz_app:category_quizzes' category_id=other_category.id %}" 
+                       class="text-decoration-none">
+                        <div class="card border-0 bg-light text-center h-100">
+                            <div class="card-body">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                     style="width: 50px; height: 50px; background-color: {{ other_category.color }}; color: white;">
+                                    <i class="{{ other_category.icon }}"></i>
+                                </div>
+                                <h6>{{ other_category.name }}</h6>
+                                <small class="text-muted">{{ other_category.quiz_count }} quiz{{ other_category.quiz_count|pluralize:"es" }}</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+.document-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+}
+
+.document-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.document-card:hover::before {
+    left: 100%;
+}
+
+.document-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(31, 38, 135, 0.5);
+}
+
+.document-thumbnail {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.document-icon {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 15px;
+    padding: 20px;
+    display: inline-block;
+}
+
+.document-badges {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2;
+}
+
+.meta-stat {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.meta-stat:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.category-item {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.category-item:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(10px);
+}
+
+.star-rating .star {
+    cursor: pointer;
+    font-size: 1.5rem;
+    margin: 0 2px;
+    color: #ddd;
+    transition: all 0.3s ease;
+}
+
+.star-rating .star:hover,
+.star-rating .star.active {
+    color: #ffc107;
+    transform: scale(1.2);
+}
+
+.rating-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.related-doc {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.related-doc:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}

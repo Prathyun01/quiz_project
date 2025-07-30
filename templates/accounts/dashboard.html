@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_extras %}
+{% csrf_token %}
+
+{% block title %}Dashboard - {{ user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <div class="profile-avatar float-animation">
+                            <img src="{{ user.profile_picture.url }}" alt="{{ user.display_name }}" 
+                                 class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <h1 class="text-glass mb-2">Welcome back, {{ user.display_name }}!</h1>
+                        <p class="text-glass-muted mb-2">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            {% if user.college %}{{ user.college.name }}{% else %}No college specified{% endif %}
+                            {% if user.year_of_study %}
+                            <span class="ms-3">
+                                <i class="fas fa-calendar me-2"></i>{{ user.get_year_of_study_display }}
+                            </span>
+                            {% endif %}
+                        </p>
+                        <p class="text-glass-muted">
+                            <i class="fas fa-clock me-2"></i>Last active: {{ user.last_activity|timesince }} ago
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-3d">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
+                            </a>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="glass-card p-4 text-center stats-card">
+                <div class="stats-icon mb-3">
+                    <i class="fas fa-trophy fa-2x text-gradient"></i>
+                </div>
+                <h3 class="text-glass mb-1">{{ user_stats.total_attempts }}</h3>
+                <p class="text-glass-muted mb-0">Quiz Attempts</p>
+                <div class="progress-3d mt-2">
+                    <div class="progress-bar-3d" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="glass-card p-4 text-center stats-card">
+                <div class="stats-icon mb-3">
+                    <i class="fas fa-percentage fa-2x text-gradient"></i>
+                </div>
+                <h3 class="text-glass mb-1">{{ user_stats.average_score|floatformat:1 }}%</h3>
+                <p class="text-glass-muted mb-0">Average Score</p>
+                <div class="progress-3d mt-2">
+                    <div class="progress-bar-3d" style="width: {{ user_stats.average_score }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Quiz Attempts -->
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-glass mb-0">
+                        <i class="fas fa-history me-2 text-gradient"></i>Recent Quiz Attempts
+                    </h4>
+                    <a href="{% url 'accounts:quiz_history' %}" class="btn btn-outline-light btn-sm">
+                        View All
+                    </a>
+                </div>
+                
+                {% if recent_attempts %}
+                <div class="quiz-attempts-list">
+                    {% for attempt in recent_attempts %}
+                    <div class="attempt-item d-flex align-items-center mb-3 p-3 rounded-3" 
+                         style="background: rgba(255, 255, 255, 0.05);">
+                        <div class="attempt-icon me-3">
+                            <i class="fas fa-{{ attempt.status|yesno:'check-circle,clock,times-circle' }} fa-2x 
+                               {% if attempt.is_passed %}text-success{% elif attempt.status == 'in_progress' %}text-warning{% else %}text-danger{% endif %}">
+                            </i>
+                        </div>
+                        <div class="attempt-details flex-grow-1">
+                            <h6 class="text-glass mb-1">
+                                <a href="{% url 'quiz_app:quiz_detail' quiz_id=attempt.quiz.id %}" 
+                                   class="text-decoration-none text-glass">
+                                    {{ attempt.quiz.title }}
+                                </a>
+                            </h6>
+                            <div class="d-flex align-items-center text-glass-muted">
+                                <span class="me-3">
+                                    <i class="fas fa-calendar me-1"></i>{{ attempt.started_at|date:"M d, Y" }}
+                                </span>
+                                <span class="me-3">
+                                    <i class="fas fa-clock me-1"></i>{{ attempt.time_taken|duration_format }}
+                                </span>
+                                {% quiz_status_badge attempt.status %}
+                            </div>
+                        </div>
+                        <div class="attempt-score text-center">
+                            <div class="score-circle" style="width: 60px; height: 60px; border-radius: 50%; 
+                                 background: conic-gradient(var(--success-color) {{ attempt.percentage_score }}%, 
+                                 rgba(255, 255, 255, 0.1) {{ attempt.percentage_score }}%);
+                                 display: flex; align-items: center; justify-content: center;">
+                                <span class="text-glass fw-bold">{{ attempt.percentage_score|floatformat:0 }}%</span>
+                            </div>
+                            <small class="text-glass-muted d-block mt-1">{{ attempt.grade }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-gradient mb-3"></i>
+                    <h5 class="text-glass mb-2">No quiz attempts yet</h5>
+                    <p class="text-glass-muted mb-3">Start taking quizzes to track your progress</p>
+                    <a href="{% url 'quiz_app:quiz_list' %}" class="btn btn-3d">
+                        <i class="fas fa-play me-2"></i>Browse Quizzes
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Activity and Quick Actions -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-bolt me-2 text-gradient"></i>Quick Actions
+                </h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'quiz_app:quiz_list' %}" class="btn btn-3d">
+                        <i class="fas fa-play me-2"></i>Take Quiz
+                    </a>
+                    <a href="{% url 'chatbot:chat_interface' %}" class="btn btn-outline-light">
+                        <i class="fas fa-robot me-2"></i>Ask AI Tutor
+                    </a>
+                    
+                    <a href="{% url 'document_manager:document_list' %}" class="btn btn-outline-light">
+                        <i class="fas fa-book me-2"></i>Study Materials
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="glass-card p-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-clock me-2 text-gradient"></i>Recent Activity
+                </h5>
+                {% if recent_activities %}
+                <div class="activity-timeline">
+                    {% for activity in recent_activities %}
+                    <div class="activity-item d-flex align-items-start mb-3">
+                        <div class="activity-icon me-3">
+                            <i class="fas fa-{{ activity.get_action_icon }} fa-sm text-gradient"></i>
+                        </div>
+                        <div class="activity-details">
+                            <p class="text-glass-muted mb-1 small">{{ activity.description }}</p>
+                            <small class="text-glass-muted">{{ activity.timestamp|timesince }} ago</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-history fa-2x text-gradient mb-2"></i>
+                    <p class="text-glass-muted mb-0">No recent activity</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate stats cards on load
+    const statsCards = document.querySelectorAll('.stats-card');
+    statsCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
+    });
+
+    // Add pulse effect to progress bars
+    const progressBars = document.querySelectorAll('.progress-bar-3d');
+    progressBars.forEach(bar => {
+        setInterval(() => {
+            bar.style.boxShadow = '0 0 20px rgba(79, 172, 254, 0.6)';
+            setTimeout(() => {
+                bar.style.boxShadow = 'none';
+            }, 500);
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}

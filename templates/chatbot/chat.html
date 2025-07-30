@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}AI StudyBot - Chat{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.enhanced-visibility {
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    font-weight: 500 !important;
+}
+
+.large-text {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+}
+
+.typing-indicator-enhanced {
+    background: #667eea !important;
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    border-radius: 1.5rem !important;
+    font-weight: 600 !important;
+    animation: glow 2s infinite !important;
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3">
+    <div class="row g-4">
+        <!-- Enhanced Sidebar -->
+        <div class="col-lg-3 col-md-4">
+            <!-- AI Provider Selection -->
+            <div class="sidebar">
+                <h5 class="large-text"><i class="fas fa-cog me-2"></i>AI Settings</h5>
+                <div class="mb-4">
+                    <label for="ai-provider" class="form-label enhanced-visibility">AI Provider</label>
+                    <select id="ai-provider" class="form-select form-select-lg">
+                        <option value="perplexity" selected>
+                            🔍 Perplexity AI (Real-time Search)
+                        </option>
+                        <option value="gemini">
+                            🤖 Google Gemini (Free)
+                        </option>
+                    </select>
+                    <small class="text-muted enhanced-visibility">Choose your preferred AI model</small>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="new-session-btn" class="btn btn-gradient btn-lg flex-fill">
+                        <i class="fas fa-plus me-2"></i>New Chat
+                    </button>
+                    <button id="clear-chat-btn" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Sessions -->
+            <div class="sidebar">
+                <h5 class="large-text"><i class="fas fa-history me-2"></i>Recent Sessions</h5>
+                {% if recent_sessions %}
+                    {% for session in recent_sessions %}
+                    <div class="recent-session" onclick="loadSession('{{ session.id }}')">
+                        <div class="session-title enhanced-visibility">{{ session.title|truncatechars:25 }}</div>
+                        <div class="session-meta">
+                            <i class="fas fa-clock me-1"></i>
+                            {{ session.updated_at|naturaltime }}
+                            <span class="ms-3">
+                                <i class="fas fa-comments me-1"></i>
+                                {{ session.message_count|default:0 }} msgs
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted enhanced-visibility">No recent sessions</p>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'chatbot:chat_history' %}" class="btn btn-outline-primary btn-lg w-100">
+                        <i class="fas fa-list me-2"></i>View All Sessions
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Main Chat Area -->
+        <div class="col-lg-9 col-md-8">
+            <div class="chat-container" data-session-id="{{ active_session.id }}">
+                <!-- Enhanced Chat Header -->
+                <div class="chat-header">
+                    <div>
+                        <h4 class="mb-1"><i class="fas fa-robot me-3"></i>StudyBot AI Assistant</h4>
+                        <div class="enhanced-visibility">
+                            {{ active_session.session_type|title }} Session • {{ active_session.title|truncatechars:35 }}
+                        </div>
+                    </div>
+                    <div class="connection-status text-success" id="connection-status">
+                        <i class="fas fa-wifi me-2"></i>Connected
+                    </div>
+                </div>
+
+                <!-- Enhanced Chat Messages -->
+                <div id="chat-messages">
+                    {% for message in messages %}
+                        <div class="chat-message {{ message.message_type }}-message">
+                            <div class="message-bubble d-flex {% if message.message_type == 'user' %}flex-row-reverse{% endif %}">
+                                {% if message.message_type == 'bot' %}
+                                    <div class="ai-avatar-small me-3">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="message-content">
+                                    <div class="message-text enhanced-visibility">{{ message.content|linebreaksbr }}</div>
+                                    
+                                    {% if message.message_type == 'user' %}
+                                        <div class="message-meta mt-2">
+                                            <small class="enhanced-visibility">{{ message.created_at|date:"H:i" }}</small>
+                                        </div>
+                                    {% else %}
+                                        <div class="message-meta mt-2">
+                                            <small class="enhanced-visibility">
+                                                <strong>{{ message.ai_provider|default:"AI"|title }}</strong>
+                                                {% if message.response_time %}
+                                                    • {{ message.response_time|floatformat:1 }}s
+                                                {% endif %}
+                                                • {{ message.created_at|date:"H:i" }}
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="message-actions">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="copyMessage(this)" title="Copy message">
+                                                <i class="fas fa-copy me-1"></i>Copy
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" 
+                                                    onclick="rateResponse('{{ message.id }}', true)" 
+                                                    title="Helpful">
+                                                <i class="fas fa-thumbs-up me-1"></i>Good
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="rateResponse('{{ message.id }}', false)" 
+                                                    title="Not helpful">
+                                                <i class="fas fa-thumbs-down me-1"></i>Bad
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if message.message_type == 'user' %}
+                                    <div class="ai-avatar-small ms-3">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="chat-message bot-message">
+                            <div class="message-bubble d-flex">
+                                <div class="ai-avatar-small me-3">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-text enhanced-visibility">
+                                        <h6>👋 Hello {{ user.display_name }}!</h6>
+                                        <p class="mb-3">I'm StudyBot, your AI study assistant. I'm here to help you with:</p>
+                                        <ul class="list-unstyled mb-3">
+                                            <li>📚 <strong>Explaining complex concepts</strong></li>
+                                            <li>🧮 <strong>Solving math problems</strong></li>
+                                            <li>📝 <strong>Writing and grammar help</strong></li>
+                                            <li>🔬 <strong>Science questions</strong></li>
+                                            <li>📊 <strong>Study strategies</strong></li>
+                                        </ul>
+                                        <p class="mb-0"><strong>What would you like to learn about today?</strong></p>
+                                    </div>
+                                    <div class="message-meta mt-2">
+                                        <small class="enhanced-visibility">via StudyBot • Just now</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Enhanced Chat Input Section -->
+                <div class="chat-input-section">
+                    <!-- Enhanced Quick Actions -->
+                    {% if quick_actions %}
+                    <div class="quick-actions">
+                        {% for action in quick_actions|slice:":4" %}
+                        <button class="quick-action-btn enhanced-visibility" 
+                                data-prompt="{{ action.prompt_template }}"
+                                title="{{ action.description }}">
+                            <i class="{{ action.icon_class|default:'fas fa-question' }} me-2"></i>
+                            {{ action.title }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Enhanced Message Input Form -->
+                    <form id="chat-form" class="d-flex align-items-end gap-3">
+                        {% csrf_token %}
+                        <div class="flex-fill">
+                            <textarea 
+                                id="chat-input" 
+                                class="form-control form-control-lg enhanced-visibility" 
+                                placeholder="Ask me anything about your studies... 🤔" 
+                                rows="2"
+                                maxlength="2000"
+                                required></textarea>
+                            <div class="form-text d-flex justify-content-between mt-2">
+                                <small class="text-muted enhanced-visibility">
+                                    <kbd>Enter</kbd> to send • <kbd>Shift+Enter</kbd> for new line
+                                </small>
+                                <small class="text-muted enhanced-visibility">
+                                    <span id="char-counter">0/2000</span>
+                                </small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-gradient btn-lg px-4" id="send-btn">
+                            <i class="fas fa-paper-plane me-2"></i>Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chatbot.js' %}"></script>
+<script>
+function showEnhancedTypingIndicator() {
+    const existingIndicator = document.getElementById('typing-indicator');
+    if (existingIndicator) return;
+
+    const chatMessages = document.getElementById('chat-messages');
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'chat-message bot-message';
+    typingDiv.innerHTML = `
+        <div class="message-bubble d-flex">
+            <div class="ai-avatar-small me-3">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="typing-indicator-enhanced">
+                    <i class="fas fa-brain me-2"></i>
+                    <strong>AI is thinking...</strong>
+                    <div class="typing-animation d-inline-flex ms-2">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+document.getElementById('chat-input').addEventListener('input', function() {
+    const counter = document.getElementById('char-counter');
+    const length = this.value.length;
+    counter.innerHTML = `<strong>${length}/2000</strong>`;
+    
+    if (length > 1800) {
+        counter.className = 'text-warning fw-bold';
+    } else if (length > 1900) {
+        counter.className = 'text-danger fw-bold';
+    } else {
+        counter.className = 'text-muted';
+    }
+});
+
+document.getElementById('chat-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.max(60, Math.min(this.scrollHeight, 150)) + 'px';
+});
+
+window.addEventListener('load', function() {
+    const chatInput = document.getElementById('chat-input');
+    chatInput.focus();
+    chatInput.style.fontSize = '1.1rem';
+});
+
+function scrollToBottomSmooth() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) {
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const textElements = document.querySelectorAll('p, span, div, button, input, textarea, select');
+    textElements.forEach(element => {
+        if (element.style.fontSize === '' || parseFloat(element.style.fontSize) < 14) {
+            element.style.fontSize = '1rem';
+        }
+    });
+    
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.style.fontSize = '1.1rem';
+        chatInput.style.fontWeight = '500';
+    }
+});
+</script>
+{% endblock %}

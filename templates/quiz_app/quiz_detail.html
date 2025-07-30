@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load quiz_extras %}
+
+{% block title %}{{ quiz.title }} - Quiz Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-header {
+        background: linear-gradient(135deg, {{ quiz.category.color }}22 0%, {{ quiz.category.color }}44 100%);
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+    .stats-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    .question-preview {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid {{ quiz.category.color }};
+    }
+    .related-quiz-card {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .related-quiz-card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Quiz Header -->
+    <div class="quiz-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="mb-3">
+                    <span class="badge" style="background-color: {{ quiz.category.color }};">
+                        <i class="{{ quiz.category.icon }}"></i> {{ quiz.category.name }}
+                    </span>
+                    {% ai_provider_badge quiz.ai_provider %}
+                    {% difficulty_badge quiz.difficulty %}
+                </div>
+                <h1 class="display-6 mb-3">{{ quiz.title }}</h1>
+                <p class="lead text-muted">{{ quiz.description }}</p>
+                
+                <!-- AI Generation Info -->
+                {% if quiz.ai_generated %}
+                <div class="alert alert-info">
+                    <i class="fas fa-robot"></i> 
+                    <strong>AI Generated Quiz</strong> - Created using {{ quiz.get_ai_provider_display }} 
+                    {% if quiz.ai_prompt %}on the topic: "{{ quiz.ai_prompt }}"{% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-4 text-center">
+                {% if quiz.featured_image %}
+                    <img src="{{ quiz.featured_image.url }}" class="img-fluid rounded" alt="{{ quiz.title }}">
+                {% else %}
+                    <div class="bg-primary rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-brain fa-4x text-white opacity-75"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Quiz Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stats-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-question-circle fa-2x text-primary mb-2"></i>
+                            <h5>{{ quiz.question_count }}</h5>
+                            <small class="text-muted">Questions</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h5>{{ quiz.time_limit }}</h5>
+                            <small class="text-muted">Minutes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-2x text-success mb-2"></i>
+                            <h5>{{ quiz.attempt_count }}</h5>
+                            <small class="text-muted">Attempts</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                            <h5>{{ quiz.average_score }}%</h5>
+                            <small class="text-muted">Avg Score</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'quiz_app:take_quiz' quiz_id=quiz.id %}" class="btn btn-success btn-lg me-3">
+                            <i class="fas fa-play"></i> Take Quiz Now
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}?next={% url 'quiz_app:take_quiz' quiz_id=quiz.id %}" class="btn btn-success btn-lg me-3">
+                            <i class="fas fa-sign-in-alt"></i> Login to Take Quiz
+                        </a>
+                    {% endif %}
+                    
+                    {% if user == quiz.created_by or user.is_staff %}
+                        <a href="{% url 'quiz_app:quiz_analytics' quiz_id=quiz.id %}" class="btn btn-info">
+                            <i class="fas fa-chart-bar"></i> View Analytics
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Question Preview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-eye"></i> Question Preview</h5>
+                </div>
+                <div class="card-body">
+                    {% for question in questions|slice:":3" %}
+                        <div class="question-preview">
+                            <strong>Q{{ question.order }}:</strong> {{ question.question_text }}
+                            {% if question.explanation %}
+                                <div class="small text-muted mt-2">
+                                    <i class="fas fa-lightbulb"></i> {{ question.explanation|truncatewords:15 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if quiz.question_count > 3 %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-ellipsis-h"></i> and {{ quiz.question_count|add:"-3" }} more questions
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User's Attempts -->
+            {% if user_attempts %}
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Your Attempts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in user_attempts %}
+                                <tr>
+                                    <td>{{ attempt.started_at|date:"M d, Y H:i" }}</td>
+                                    <td>{{ attempt.score }}/{{ quiz.total_marks }}</td>
+                                    <td>{% grade_badge attempt.grade %}</td>
+                                    <td>{{ attempt.time_taken|duration_format }}</td>
+                                    <td>
+                                        {% if attempt.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif attempt.status == 'in_progress' %}
+                                            <span class="badge bg-warning">In Progress</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Abandoned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.status == 'completed' %}
+                                            <a href="{% url 'quiz_app:quiz_results' quiz_id=quiz.id attempt_id=attempt.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                View Results
+                                            </a>
+                                        {% elif attempt.status == 'in_progress' %}
+                                            <a href="{% url 'quiz_app:take_quiz' quiz_id=quiz.id %}" 
+                                               class="btn btn-sm btn-warning">
+                                                Continue
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quiz Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-info-circle"></i> Quiz Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <small class="text-muted">Difficulty</small>
+                            <div>{% difficulty_badge quiz.difficulty %}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Pass Rate</small>
+                            <div class="h6">{{ quiz.pass_percentage }}%</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-user"></i> Created by:</span>
+                            <span>{{ quiz.created_by.username }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-calendar"></i> Created:</span>
+                            <span>{{ quiz.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        {% if quiz.ai_generated %}
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-robot"></i> AI Provider:</span>
+                            <span>{{ quiz.get_ai_provider_display }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Quizzes -->
+            {% if related_quizzes %}
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-th-list"></i> Related Quizzes</h6>
+                </div>
+                <div class="card-body">
+                    {% for related_quiz in related_quizzes %}
+                        <div class="related-quiz-card card mb-3">
+                            <div class="card-body p-3">
+                                <h6 class="card-title">{{ related_quiz.title|truncatechars:40 }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        {{ related_quiz.question_count }} questions
+                                    </small>
+                                    <a href="{% url 'quiz_app:quiz_detail' quiz_id=related_quiz.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="text-center">
+                        <a href="{% url 'quiz_app:category_quizzes' category_id=quiz.category.id %}" 
+                           class="btn btn-sm btn-outline-secondary">
+                            View All in {{ quiz.category.name }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

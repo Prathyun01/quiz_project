@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>New Quiz Available</title>
+    <style>
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .quiz-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="content">
+            <h2>🎯 New Quiz Available!</h2>
+            <p>Hi {{ user.get_full_name }},</p>
+            
+            <div class="quiz-card">
+                <h3>{{ quiz.title }}</h3>
+                <p>{{ quiz.description }}</p>
+                <div>
+                    <strong>Category:</strong> {{ quiz.category.name }}<br>
+                    <strong>Difficulty:</strong> {{ quiz.difficulty|title }}<br>
+                    <strong>Questions:</strong> {{ quiz.total_questions }}<br>
+                    <strong>Time Limit:</strong> {{ quiz.time_limit }} minutes
+                </div>
+            </div>
+            
+            <p>A new quiz has been added to your category of interest. Test your knowledge and compete with other students!</p>
+            
+            <a href="http://localhost:8000{% url 'quiz_app:quiz_detail' quiz.pk %}" class="btn">Take Quiz Now</a>
+            
+            <p style="margin-top: 30px; color: #666;">
+                Good luck with your studies!<br>
+                StudyHub Team
+            </p>
+        </div>
+    </div>
+</body>
+</html>

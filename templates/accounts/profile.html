@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% csrf_token %}
+{% block title %}Edit Profile - {{ user.display_name }}{% endblock %}
+
+{% block content %}
+<div class="container px-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Profile Header -->
+            <div class="glass-card p-4 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center">
+                        <div class="profile-avatar-large mb-3">
+                            <img src="{{ user.profile_picture.url }}" alt="{{ user.display_name }}" 
+                                 class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <h2 class="text-glass mb-2">Edit Your Profile</h2>
+                        <p class="text-glass-muted mb-3">
+                            Update your information to personalize your learning experience
+                        </p>
+                        <div class="d-flex gap-2">
+                            
+                            <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-light">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Form -->
+            <div class="glass-card p-4">
+                <form method="post" enctype="multipart/form-data" class="profile-form">
+                    {% csrf_token %}
+                    {% crispy form %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image preview functionality
+    const imageInputs = document.querySelectorAll('input[type="file"]');
+    imageInputs.forEach(input => {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.createElement('img');
+                    preview.src = e.target.result;
+                    preview.style.cssText = 'width: 100px; height: 100px; object-fit: cover; border-radius: 10px; margin-top: 10px;';
+                    
+                    const existingPreview = input.parentNode.querySelector('img');
+                    if (existingPreview) {
+                        existingPreview.replaceWith(preview);
+                    } else {
+                        input.parentNode.appendChild(preview);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
+    // Form validation enhancements
+    const form = document.querySelector('.profile-form');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        submitBtn.disabled = true;
+        
+        // Re-enable button after 5 seconds as fallback
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

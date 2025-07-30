@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Quizzes - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+        margin-bottom: 20px;
+    }
+    .quiz-card:hover {
+        transform: translateY(-5px);
+    }
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 2;
+    }
+    .filter-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-cogs"></i> Manage Quizzes</h2>
+            <p class="text-muted">Create, edit, and manage your manual quizzes</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_quiz:create_quiz' %}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus"></i> Create New Quiz
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="card filter-card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-filter"></i> Filters</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="mb-3">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="search" class="form-control" 
+                                   value="{{ search_query|default:'' }}" placeholder="Search quizzes...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-control">
+                                <option value="">All Statuses</option>
+                                <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                                <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                                <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Apply Filters</button>
+                        <a href="{% url 'admin_quiz:quiz_list' %}" class="btn btn-outline-secondary btn-sm w-100 mt-2">Clear</a>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card filter-card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Quick Stats</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">Total Quizzes</small>
+                            <div class="h5 text-primary">{{ page_obj.paginator.count }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz List -->
+        <div class="col-lg-9">
+            {% if quizzes %}
+                <div class="row">
+                    {% for quiz in quizzes %}
+                    <div class="col-md-6 col-xl-4 mb-4">
+                        <div class="card quiz-card h-100 position-relative">
+                            <!-- Status Badge -->
+                            <div class="status-badge">
+                                {% if quiz.status == 'published' %}
+                                    <span class="badge bg-success">Published</span>
+                                {% elif quiz.status == 'draft' %}
+                                    <span class="badge bg-warning">Draft</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Archived</span>
+                                {% endif %}
+                            </div>
+
+                            {% if quiz.featured_image %}
+                                <img src="{{ quiz.featured_image.url }}" class="card-img-top" 
+                                     style="height: 180px; object-fit: cover;" alt="{{ quiz.title }}">
+                            {% else %}
+                                <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center" 
+                                     style="height: 180px; background: linear-gradient(135deg, #6f42c1, #e83e8c);">
+                                    <i class="fas fa-clipboard-list fa-3x text-white opacity-75"></i>
+                                </div>
+                            {% endif %}
+
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-2">
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-user-cog"></i> Manual Quiz
+                                    </span>
+                                    {% if quiz.category %}
+                                        <span class="badge" style="background-color: {{ quiz.category.color }};">
+                                            <i class="{{ quiz.category.icon }}"></i> {{ quiz.category.name }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <h5 class="card-title">{{ quiz.title }}</h5>
+                                <p class="card-text text-muted">{{ quiz.description|truncatewords:15 }}</p>
+
+                                <div class="mt-auto">
+                                    <div class="row text-center small text-muted mb-3">
+                                        <div class="col-4">
+                                            <i class="fas fa-question-circle"></i><br>
+                                            {{ quiz.question_count }} Questions
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-clock"></i><br>
+                                            {{ quiz.time_limit }} mins
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-signal"></i><br>
+                                            {{ quiz.get_difficulty_display }}
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'admin_quiz:quiz_detail' quiz_id=quiz.id %}" 
+                                           class="btn btn-primary">
+                                            <i class="fas fa-cog"></i> Manage
+                                        </a>
+                                        
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'admin_quiz:edit_quiz' quiz_id=quiz.id %}" 
+                                               class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{% url 'admin_quiz:preview_quiz' quiz_id=quiz.id %}" 
+                                               class="btn btn-outline-info btn-sm">
+                                                <i class="fas fa-eye"></i> Preview
+                                            </a>
+                                            <a href="{% url 'admin_quiz:duplicate_quiz' quiz_id=quiz.id %}" 
+                                               class="btn btn-outline-success btn-sm">
+                                                <i class="fas fa-copy"></i> Clone
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-transparent border-0">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> Updated {{ quiz.updated_at|date:"M d, Y" }}
+                                    {% if quiz.is_complete %}
+                                        <span class="text-success float-end">
+                                            <i class="fas fa-check-circle"></i> Complete
+                                        </span>
+                                    {% else %}
+                                        <span class="text-warning float-end">
+                                            <i class="fas fa-exclamation-triangle"></i> Incomplete
+                                        </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Quiz pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-4x text-muted mb-4"></i>
+                    <h4>No Quizzes Found</h4>
+                    <p class="text-muted">
+                        {% if search_query or status_filter %}
+                            Try adjusting your search criteria or
+                            <a href="{% url 'admin_quiz:quiz_list' %}">clear filters</a>.
+                        {% else %}
+                            Create your first manual quiz to get started!
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'admin_quiz:create_quiz' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus"></i> Create Your First Quiz
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Quiz - Admin Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+    .form-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px;
+    }
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+    .step {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 10px;
+        font-weight: bold;
+        color: #6c757d;
+    }
+    .step.active {
+        background: #28a745;
+        color: white;
+    }
+    .step.completed {
+        background: #20c997;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="create-header text-center">
+        <h1 class="display-6 mb-3">
+            <i class="fas fa-plus-circle"></i> Create New Quiz
+        </h1>
+        <p class="lead">Build a custom quiz with your own questions and answers</p>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step active">1</div>
+        <div class="step">2</div>
+        <div class="step">3</div>
+    </div>
+    <div class="text-center mb-4">
+        <small class="text-muted">Step 1: Basic Quiz Information</small>
+    </div>
+
+    <!-- Form Container -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% crispy form %}
+                </form>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-lightbulb"></i> Tips for Creating Great Quizzes</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-check-circle text-success"></i> Do's</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-arrow-right text-success"></i> Use clear, specific titles</li>
+                                <li><i class="fas fa-arrow-right text-success"></i> Write detailed descriptions</li>
+                                <li><i class="fas fa-arrow-right text-success"></i> Set appropriate time limits</li>
+                                <li><i class="fas fa-arrow-right text-success"></i> Choose relevant categories</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-times-circle text-danger"></i> Don'ts</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-arrow-right text-danger"></i> Avoid vague questions</li>
+                                <li><i class="fas fa-arrow-right text-danger"></i> Don't make time limits too short</li>
+                                <li><i class="fas fa-arrow-right text-danger"></i> Avoid overly complex language</li>
+                                <li><i class="fas fa-arrow-right text-danger"></i> Don't skip explanations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps Preview -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-route"></i> What's Next?</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    <span class="text-white font-weight-bold">2</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Add Questions</h6>
+                                    <small class="text-muted">Create multiple choice questions</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    <span class="text-white font-weight-bold">3</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Publish & Share</h6>
+                                    <small class="text-muted">Make your quiz available to users</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Quiz - StudyHub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header -->
+            <div class="card-3d p-4 text-center mb-4">
+                <h1 class="glow-text mb-3">
+                    <i class="fas fa-plus-circle me-3"></i>Create New Quiz
+                </h1>
+                <p class="text-light-glass">Design your own quiz or let AI generate one for you</p>
+            </div>
+
+            <!-- Quiz Creation Tabs -->
+            <div class="creation-tabs-3d mb-4">
+                <nav class="nav nav-pills-3d">
+                    <a class="nav-link-3d active" id="manual-tab" data-bs-toggle="pill" href="#manual">
+                        <i class="fas fa-edit me-2"></i>Manual Creation
+                    </a>
+                    <a class="nav-link-3d" id="ai-tab" data-bs-toggle="pill" href="#ai">
+                        <i class="fas fa-robot me-2"></i>AI Generation
+                    </a>
+                </nav>
+            </div>
+
+            <div class="tab-content">
+                <!-- Manual Creation -->
+                <div class="tab-pane fade show active" id="manual">
+                    <div class="card-3d">
+                        <div class="card-body-3d p-4">
+                            <form method="post" id="quiz-form">
+                                {% csrf_token %}
+                                {{ form|crispy }}
+                                
+                                <div class="questions-section-3d mt-4">
+                                    <h5 class="glow-text mb-3">Questions</h5>
+                                    <div id="questions-container">
+                                        <!-- Questions will be added dynamically -->
+                                    </div>
+                                    <button type="button" class="btn-3d" id="add-question">
+                                        <i class="fas fa-plus me-2"></i>Add Question
+                                    </button>
+                                </div>
+                                
+                                <div class="form-actions-3d mt-5">
+                                    <button type="submit" class="btn-success-3d me-3">
+                                        <i class="fas fa-save me-2"></i>Save Quiz
+                                    </button>
+                                    <a href="{% url 'quiz_app:quiz_list' %}" class="btn btn-outline-light">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Generation -->
+                <div class="tab-pane fade" id="ai">
+                    <div class="card-3d">
+                        <div class="card-body-3d p-4">
+                            <form method="post" id="ai-quiz-form">
+                                {% csrf_token %}
+                                {{ ai_form|crispy }}
+                                
+                                <div class="ai-preview-3d mt-4" id="ai-preview" style="display: none;">
+                                    <h5 class="glow-text mb-3">AI Generated Preview</h5>
+                                    <div id="preview-content"></div>
+                                </div>
+                                
+                                <div class="form-actions-3d mt-4">
+                                    <button type="button" class="btn-3d me-3" id="generate-ai-quiz">
+                                        <i class="fas fa-magic me-2"></i>Generate with AI
+                                    </button>
+                                    <button type="submit" class="btn-success-3d" id="save-ai-quiz" style="display: none;">
+                                        <i class="fas fa-save me-2"></i>Save Generated Quiz
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/quiz-creator.js' %}"></script>
+{% endblock %}

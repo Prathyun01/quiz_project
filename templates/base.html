@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Quiz Platform with AI-powered features and 3D design">
+    <title>{% block title %}Quiz Platform{% endblock %}</title>
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/quiz.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin-quiz.css' %}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Three.js for 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <!-- 3D Background Canvas -->
+    <div id="three-background"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'accounts:dashboard' %}">
+                <i class="fas fa-brain me-2"></i>QuizPlatform
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_app:quiz_list' %}">
+                            <i class="fas fa-list me-1"></i>Quizzes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_app:categories' %}">
+                            <i class="fas fa-tags me-1"></i>Categories
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'document_manager:document_list' %}">
+                            <i class="fas fa-file-pdf me-1"></i>Documents
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'chatbot:chat_interface' %}">
+                            <i class="fas fa-robot me-1"></i>AI Tutor
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'quiz_app:generate_ai_quiz' %}">
+                            <i class="fas fa-magic me-1"></i>Generate AI Quiz
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                {% if user.is_authenticated %}
+         
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
+                            <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" width="30" height="30">
+                            {{ user.display_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end glass-card">
+                            <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a></li>
+                            
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            {% if user.is_staff %}
+                            <li><h6 class="dropdown-header">Admin Tools</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_quiz:dashboard' %}">
+                                <i class="fas fa-tools me-2"></i>Admin Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_quiz:quiz_list' %}">
+                                <i class="fas fa-cogs me-2"></i>Manage Quizzes
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_quiz:create_quiz' %}">
+                                <i class="fas fa-plus me-2"></i>Create Quiz
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_quiz:manage_categories' %}">
+                                <i class="fas fa-tags me-2"></i>Manage Categories
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:settings' %}">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% else %}
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:register' %}">Register</a>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    
+    <!-- Main Content -->
+    <main class="container-fluid mt-5 pt-4">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="glass-card p-4">
+                        <h6 class="text-glass">Quiz Platform</h6>
+                        <p class="text-glass-muted">Interactive learning with AI-powered quizzes and social features.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-card p-4">
+                        <h6 class="text-glass">Quick Links</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="list-unstyled">
+                                    <li><a href="{% url 'quiz_app:quiz_list' %}" class="text-glass-muted">Browse Quizzes</a></li>
+                                    {% if user.is_authenticated %}
+                                    <li><a href="{% url 'quiz_app:generate_ai_quiz' %}" class="text-glass-muted">Generate Quiz</a></li>
+                                    {% endif %}
+                                    
+                                    <li><a href="{% url 'document_manager:document_list' %}" class="text-glass-muted">Study Materials</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="list-unstyled">
+                                    <li><a href="{% url 'chatbot:chat_interface' %}" class="text-glass-muted">AI Tutor</a></li>
+                                   
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/3d-background.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+    <script src="{% static 'js/quiz.js' %}"></script>
+    <script src="{% static 'js/quiz-list.js' %}"></script>
+    <script src="{% static 'js/quiz-timer.js' %}"></script>
+    <script src="{% static 'js/admin-quiz.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,92 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify crispy_forms_tags %}
+
+{% block title %}Generate AI Quiz{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/admin-custom.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ai-quiz-generator">
+    <div class="module aligned">
+        <div class="form-row">
+            <div class="ai-generator-header">
+                <h1>🤖 AI Quiz Generator</h1>
+                <p class="help">Generate educational quizzes using artificial intelligence</p>
+            </div>
+        </div>
+        
+        <form method="post" class="ai-quiz-form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>📚 Quiz Configuration</h3>
+                {{ form|crispy }}
+            </div>
+            
+            <div class="form-section">
+                <h3>🎯 AI Provider Selection</h3>
+                <div class="ai-provider-info">
+                    <div class="provider-card">
+                        <h4>OpenAI GPT-3.5</h4>
+                        <ul>
+                            <li>✅ High-quality questions</li>
+                            <li>✅ Multiple choice format</li>
+                            <li>✅ Detailed explanations</li>
+                        </ul>
+                    </div>
+                    <div class="provider-card">
+                        <h4>Google Gemini</h4>
+                        <ul>
+                            <li>✅ Contextual understanding</li>
+                            <li>✅ Educational focus</li>
+                            <li>✅ Multi-format support</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-row">
+                <input type="submit" value="🚀 Generate Quiz" class="default generate-btn">
+                <a href="{% url 'admin:quiz_app_quiz_changelist' %}" class="cancel-link">
+                    Cancel
+                </a>
+            </div>
+        </form>
+        
+        <div class="help-section">
+            <h3>💡 Tips for Better AI Quiz Generation</h3>
+            <ul>
+                <li><strong>Be Specific:</strong> Use clear, specific topics (e.g., "Python Functions" instead of "Programming")</li>
+                <li><strong>Choose Appropriate Difficulty:</strong> Match the difficulty to your target audience</li>
+                <li><strong>Optimal Question Count:</strong> 5-15 questions work best for focused learning</li>
+                <li><strong>Time Allocation:</strong> Allow 1-2 minutes per question for complex topics</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+    {{ block.super }}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateBtn = document.querySelector('.generate-btn');
+        const form = document.querySelector('.ai-quiz-form');
+        
+        if (form) {
+            form.addEventListener('submit', function() {
+                generateBtn.value = '⚡ Generating...';
+                generateBtn.disabled = true;
+                
+                // Show loading animation
+                generateBtn.style.background = 'linear-gradient(-45deg, #667eea, #764ba2, #667eea, #764ba2)';
+                generateBtn.style.backgroundSize = '400% 400%';
+                generateBtn.style.animation = 'gradient 2s ease infinite';
+            });
+        }
+    });
+    </script>
+{% endblock %}

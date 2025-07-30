@@ -1,0 +1,241 @@
+{% extends 'document_manager/base_document.html' %}
+{% load static %}
+{% load document_extras %}
+{% load humanize %}
+
+{% block title %}{{ document.title }} - Documents{% endblock %}
+
+{% block content %}
+<div class="container px-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb glass-card p-3">
+            <li class="breadcrumb-item">
+                <a href="{% url 'document_manager:document_list' %}" class="text-glass">Documents</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'document_manager:category_documents' category_id=document.category.id %}" class="text-glass">
+                    {{ document.category.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active text-glass">{{ document.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Document Header -->
+            <div class="glass-card p-4 mb-4">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h1 class="text-glass mb-3">{{ document.title }}</h1>
+                        
+                        <!-- Badges -->
+                        <div class="mb-3">
+                            {% if document.is_featured %}
+                            <span class="badge bg-warning me-2">
+                                <i class="fas fa-star"></i> Featured
+                            </span>
+                            {% endif %}
+                            <span class="badge {{ document.access_level|access_level_badge_class }} me-2">
+                                {{ document.get_access_level_display }}
+                            </span>
+                            <span class="badge bg-secondary me-2">{{ document.file_extension|upper }}</span>
+                            <span class="badge bg-info">{{ document.category.name }}</span>
+                        </div>
+
+                        <p class="text-glass-muted">{{ document.description }}</p>
+
+                        <!-- Tags -->
+                        {% if document.tags.exists %}
+                        <div class="mb-3">
+                            <strong class="text-glass">Tags:</strong>
+                            {% for tag in document.tags.all %}
+                            <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 text-center">
+                        <!-- File Icon -->
+                        <div class="mb-3">
+                            <i class="{{ document.file_extension|file_icon_class }} fa-5x"></i>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            {% if document|can_access:user %}
+                            <a href="{% document_download_url document %}" 
+                               class="btn btn-success btn-lg">
+                                <i class="fas fa-download me-2"></i>Download Document
+                            </a>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                {% if not user.is_authenticated %}
+                                    Please log in to download this document.
+                                {% else %}
+                                    You don't have permission to download this document.
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% share_buttons document user %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>Document Statistics
+                </h5>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-glass">{{ document.download_count }}</h3>
+                            <small class="text-glass-muted">Downloads</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-glass">{{ document.view_count }}</h3>
+                            <small class="text-glass-muted">Views</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <h3 class="text-glass">{{ document.file_size|format_file_size }}</h3>
+                            <small class="text-glass-muted">File Size</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <div class="text-glass">{{ document.average_rating|stars_display }}</div>
+                            <small class="text-glass-muted">Rating</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Reviews -->
+            {% if recent_ratings %}
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-comments me-2"></i>Recent Reviews
+                </h5>
+                {% for rating in recent_ratings %}
+                <div class="review-item mb-3 pb-3 border-bottom border-secondary">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="text-glass">{{ rating.user.username }}</strong>
+                            <div class="mb-1">{{ rating.rating|stars_display }}</div>
+                        </div>
+                        <small class="text-glass-muted">{{ rating.created_at|naturaltime }}</small>
+                    </div>
+                    {% if rating.review %}
+                    <p class="text-glass-muted mt-2 mb-0">{{ rating.review }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Document Info -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-info-circle me-2"></i>Document Information
+                </h5>
+                <table class="table table-sm">
+                    <tr>
+                        <td class="text-glass-muted">Category:</td>
+                        <td class="text-glass">{{ document.category.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-glass-muted">Access Level:</td>
+                        <td class="text-glass">{{ document.get_access_level_display }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-glass-muted">File Type:</td>
+                        <td class="text-glass">{{ document.file_extension|upper }}</td>
+                    </tr>
+                    {% if document.author %}
+                    <tr>
+                        <td class="text-glass-muted">Author:</td>
+                        <td class="text-glass">{{ document.author }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if document.publisher %}
+                    <tr>
+                        <td class="text-glass-muted">Publisher:</td>
+                        <td class="text-glass">{{ document.publisher }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if document.publication_date %}
+                    <tr>
+                        <td class="text-glass-muted">Published:</td>
+                        <td class="text-glass">{{ document.publication_date|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if document.language %}
+                    <tr>
+                        <td class="text-glass-muted">Language:</td>
+                        <td class="text-glass">{{ document.language|upper }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td class="text-glass-muted">Uploaded By:</td>
+                        <td class="text-glass">{{ document.uploaded_by.username }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-glass-muted">Upload Date:</td>
+                        <td class="text-glass">{{ document.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-glass-muted">Last Updated:</td>
+                        <td class="text-glass">{{ document.updated_at|naturaltime }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-glass-muted">File Size:</td>
+                        <td class="text-glass">{{ document.file_size|format_file_size }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Related Documents -->
+            {% if related_documents %}
+            <div class="glass-card p-4">
+                <h5 class="text-glass mb-3">
+                    <i class="fas fa-file-alt me-2"></i>Related Documents
+                </h5>
+                {% for related in related_documents %}
+                <div class="related-doc mb-3 p-2 border-bottom border-secondary">
+                    <a href="{% url 'document_manager:document_detail' document_id=related.id %}" 
+                       class="text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="{{ related.file_extension|file_icon_class }}"></i>
+                            </div>
+                            <div>
+                                <div class="text-glass small">{{ related.title|truncatechars:35 }}</div>
+                                <div class="text-glass-muted" style="font-size: 0.8em;">
+                                    <i class="fas fa-download"></i> {{ related.download_count }}
+                                    <i class="fas fa-eye ms-2"></i> {{ related.view_count }}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
